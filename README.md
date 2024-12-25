@@ -2,6 +2,10 @@
 
 Added TypeScript decorators support for [yup](https://github.com/jquense/yup)
 
+### Preface
+
+This library is a continuation of `yup-decorators`, enhanced with support for the latest versions of `yup` and `TypeScript`. I would like to thank the original creators of yup-decorators for their excellent work in providing a powerful and flexible way to work with yup schemas. This version aims to bring the same functionality while keeping up with updates to yup and modern TypeScript features, offering an improved and more seamless experience.
+
 ### Usage
 
 - Named schema
@@ -127,7 +131,3 @@ result; // {email: 'vdtn359@gmail.com', age: 18 }
 ```
 
 The sync version is `isValidSync`
-
-### API usage
-
-The API documentation is available at http://luxuriant-sneeze.surge.sh/
