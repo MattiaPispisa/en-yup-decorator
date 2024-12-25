@@ -75,7 +75,7 @@ function schema(
  * @param {Schema} schema the schema to register
  * @return {PropertyDecorator} The property decorator
  */
-function is(schema: Schema<AnyObject>): PropertyDecorator {
+function is(schema: Schema<any>): PropertyDecorator {
   return (target, property) => {
     metadataStorage.addSchemaMetadata({
       target: target instanceof Function ? target : target.constructor,
@@ -345,7 +345,7 @@ function _defineSchema(
     return objectSchema;
   }
 
-  const objectShape: Record<string, Schema<AnyObject>> = Array.from(
+  const objectShape: Record<string, Schema<any>> = Array.from(
     schemaMap.entries()
   ).reduce((currentShape, [property, schema]) => {
     return { ...currentShape, [property]: schema };

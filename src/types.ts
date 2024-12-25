@@ -1,7 +1,7 @@
-import { AnyObject, Schema } from 'yup';
+import { Schema } from 'yup';
 
 type PropertyName = string | symbol;
-type PropertySchema = Schema<AnyObject>;
+type PropertySchema = Schema<any>;
 type TargetPropertiesSchemas = Map<PropertyName, PropertySchema>;
 type TargetClass = Function;
 

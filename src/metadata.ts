@@ -1,4 +1,4 @@
-import { AnyObject, Schema } from 'yup';
+import {  Schema } from 'yup';
 import {
   TargetClass,
   TargetPropertiesSchemas,
@@ -22,7 +22,7 @@ export class MetadataStorage {
     let schemaMap = this._metadataMap.get(target);
 
     if (!schemaMap) {
-      schemaMap = new Map<string, Schema<AnyObject>>();
+      schemaMap = new Map<string, Schema<any>>();
       this._metadataMap.set(target, schemaMap);
     }
     schemaMap.set(property, schema);
@@ -58,7 +58,7 @@ export class MetadataStorage {
       ...inheritanceMaps.map(map => Array.from(map.entries()))
     );
 
-    const schemaMap = new Map<PropertyName, Schema<AnyObject>>(iterator);
+    const schemaMap = new Map<PropertyName, Schema<any>>(iterator);
 
     this._metadataCache.set(target, schemaMap);
     return schemaMap;
