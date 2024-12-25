@@ -1,4 +1,10 @@
-import type { AnyObject, ArraySchema, ObjectSchema, Schema, ValidateOptions } from 'yup';
+import {
+  AnyObject,
+  ArraySchema,
+  ObjectSchema,
+  Schema,
+  ValidateOptions,
+} from 'yup';
 import 'reflect-metadata';
 import * as yup from 'yup';
 
@@ -126,9 +132,9 @@ function nestedType(
 }
 
 /**
- * Register an object schema to the given property. 
+ * Register an object schema to the given property.
  * Use this when the property type is known and can be extracted using reflect-metadata
- * 
+ *
  * @param objectSchema an optional object schema
  * @return {PropertyDecorator}
  */
@@ -152,11 +158,11 @@ function nested(objectSchema?: ObjectSchema<AnyObject>): PropertyDecorator {
 
 /**
  * Get the object schema
- * 
+ *
  * @param {Object} type the object type
  * @param {ObjectSchema} predefinedObjectSchema object schema to use,
  * if undefined, it will pick the schema from the type
- * 
+ *
  * @returns {ObjectSchema}
  */
 function _getObjectSchema(
@@ -200,7 +206,7 @@ export function validate({ schemaName, object, options }: IValidateArguments) {
 
 /**
  * Validate an object synchronously
- * 
+ *
  * @param args the validate arguments
  * @param args.schemaName the name of the schema to use
  * @param args.object the object to validate
@@ -218,7 +224,7 @@ export function validateSync({
 
 /**
  * Validate an object's property asynchronously
- * 
+ *
  * @param args the validate arguments
  * @param args.schemaName the name of the schema to use
  * @param args.path the property path
@@ -237,7 +243,7 @@ function validateAt({
 
 /**
  * Validate an object's property synchronously
- * 
+ *
  * @param args the validate arguments
  * @param args.schemaName the name of the schema to use
  * @param args.path the property path
@@ -256,7 +262,7 @@ function validateSyncAt({
 
 /**
  * Check if an object is valid asynchronously
- * 
+ *
  * @param args the validate arguments
  * @param args.schemaName the name of the schema to use
  * @param args.object the object to validate
@@ -283,7 +289,7 @@ function isValidSync({ schemaName, object, options }: IValidateArguments) {
 
 /**
  * Coerce object's property according to the schema
- * 
+ *
  * @param args the validate arguments
  * @param args.schemaName the name of the schema to use
  * @param args.object the object to validate
@@ -323,6 +329,8 @@ function _getSchema({
 /**
  * Compose object schema from metadata properties schemas
  *
+ * Update {@link _allSchemas} with the composed schema
+ *
  * @param {Function} target
  * @param {ObjectSchema} objectSchema
  * @returns {ObjectSchema} the composed object schema
@@ -351,8 +359,6 @@ function _defineSchema(
 const a = yup;
 const an = yup;
 
-export type {IValidateArguments, IValidatePathArguments}
-
 export {
   cast,
   isValidSync,
@@ -369,4 +375,6 @@ export {
   nested,
   nestedArray,
   is,
+  IValidateArguments,
+  IValidatePathArguments,
 };

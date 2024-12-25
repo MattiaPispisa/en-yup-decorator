@@ -1,5 +1,5 @@
-import type { AnyObject, Schema } from 'yup';
-import type {
+import { AnyObject, Schema } from 'yup';
+import {
   TargetClass,
   TargetPropertiesSchemas,
   PropertySchema,
@@ -41,6 +41,7 @@ export class MetadataStorage {
     let currentTarget = target;
     do {
       const schema = this._metadataMap.get(currentTarget);
+
       if (schema) {
         inheritanceMaps.unshift(schema);
       }
@@ -52,12 +53,14 @@ export class MetadataStorage {
       return null;
     }
 
-    const iterator: Array<[PropertyName, PropertySchema]> = []
-    iterator.concat(...inheritanceMaps.map(map => Array.from(map.entries())));
+    let iterator: Array<[PropertyName, PropertySchema]> = [];
+    iterator = iterator.concat(
+      ...inheritanceMaps.map(map => Array.from(map.entries()))
+    );
 
     const schemaMap = new Map<PropertyName, Schema<AnyObject>>(iterator);
 
-    this._metadataCache.set(target, schemaMap );
+    this._metadataCache.set(target, schemaMap);
     return schemaMap;
   }
 }

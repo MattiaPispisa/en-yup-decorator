@@ -4,17 +4,24 @@ import { House } from './models/house';
 
 describe('validate simple object', function() {
   describe('test validate', function() {
-    /*  it('should allow valid objects', async () => {
-      const object = getValidPerson({ age: -1 });
+    it('should allow valid objects', async () => {
+      const object = getValidPerson();
       const actual = await validate({ object, schemaName: Person });
       expect(actual).toBe(object);
-    }); */
+    });
 
     it('should reject invalid objects', async () => {
       const object = getInvalidPerson();
-      const actual = await validate({ object, schemaName: Person });
-      console.log(actual);
-      expect(actual).toBe(object);
+      await expect(
+        validate({ object, schemaName: Person, options: { abortEarly: false } })
+      ).rejects.toMatchObject({
+        name: 'ValidationError',
+        errors: [
+          'Not a valid email',
+          'age must be greater than 0',
+          'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
+        ], // Specific error messages
+      });
     });
   });
 });
@@ -287,7 +294,7 @@ describe('validate simple object', function() {
   });
 }); */
 
-/* function getValidPerson({
+function getValidPerson({
   email,
   age,
   address,
@@ -306,7 +313,7 @@ describe('validate simple object', function() {
       type: ifNullOrUndefined(houseType, 'VILLA'),
     }),
   });
-} */
+}
 
 function getInvalidPerson({
   email,
