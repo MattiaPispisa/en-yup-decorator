@@ -23,6 +23,18 @@ const _allSchemas = new Map<Function, ObjectSchema<AnyObject>>();
  *
  * @param {string} name Name of the schema
  * @returns {ObjectSchema<AnyObject>} The yup schema
+ *
+ * @example
+ * ```typescript
+ * // register a named schema
+ * \@namedSchema('user')
+ * class User {
+ *	...
+ * }
+ *
+ * // you can get the yup schema with
+ * const userSchema = getNamedSchema('user');
+ * ```
  */
 function getNamedSchema(name: string): ObjectSchema<AnyObject> {
   return _schemas[name]!;
@@ -33,6 +45,17 @@ function getNamedSchema(name: string): ObjectSchema<AnyObject> {
  *
  * @param {Object} target the object's type (class)
  * @returns {ObjectSchema<AnyObject>} The yup schema
+ *
+ * @example
+ * ```typescript
+ * \@schema()
+ * class User {
+ *   ...
+ * }
+ *
+ * // you can get the yup schema with
+ * const userSchema = getSchemaByType(User);
+ * ```
  */
 function getSchemaByType(target: Object): ObjectSchema<AnyObject> {
   const constructor = target instanceof Function ? target : target.constructor;
@@ -44,6 +67,19 @@ function getSchemaByType(target: Object): ObjectSchema<AnyObject> {
  *
  * @param {string} name the schema name
  * @param {ObjectSchema<AnyObject>} objectSchema The initial schema
+ *
+ * @example
+ *
+ * ```typescript
+ * // register a named schema
+ * \@namedSchema('user')
+ * class User {
+ *	...
+ * }
+ *
+ * // you can get the yup schema with
+ * const userSchema = getNamedSchema('user');
+ * ```
  */
 function namedSchema(
   name: string,
@@ -60,6 +96,17 @@ function namedSchema(
  *
  * @param {ObjectSchema} objectSchema The initial schema
  * @return {ClassDecorator} The class decorator
+ *
+ * @example
+ * ```typescript
+ * \@schema()
+ * class User {
+ *   ...
+ * }
+ *
+ * // you can get the yup schema with
+ * const userSchema = getSchemaByType(User);
+ * ```
  */
 function schema(
   objectSchema: ObjectSchema<AnyObject> = yup.object<AnyObject>()
@@ -74,6 +121,21 @@ function schema(
  *
  * @param {Schema} schema the schema to register
  * @return {PropertyDecorator} The property decorator
+ *
+ * @example
+ * ```typescript
+ *    \@is(a.string().uppercase())
+ *    uppercase: string;
+ *
+ *    \@is(
+ *       an
+ *          .array()
+ *          .of(a.number())
+ *          .min(2)
+ *          .max(3)
+ *   )
+ *   array: number[];
+ * ```
  */
 function is(schema: Schema<any>): PropertyDecorator {
   return (target, property) => {
@@ -91,6 +153,12 @@ function is(schema: Schema<any>): PropertyDecorator {
  * @param {() => Function} typeFunction a function that returns type of the element
  * @param {ArraySchema} arraySchema the array schema
  * @param {ObjectSchema} elementSchema an optional object schema
+ *
+ * @example
+ * ```typescript
+ *    \@nestedArray(() => Office, an.array().min(1, 'Office is required'))
+ *    office: Office[];
+ * ```
  */
 function nestedArray(
   typeFunction: () => Function,
@@ -114,6 +182,12 @@ function nestedArray(
  *
  * @param {() => Function} typeFunction  a function that returns type of the element
  * @param {ObjectSchema} objectSchema an optional object schema
+ *
+ * @example
+ * ```typescript
+ *    \@nestedType(() => Office)
+ *    office: Office;
+ * ```
  */
 function nestedType(
   typeFunction: () => Function,
@@ -137,6 +211,12 @@ function nestedType(
  *
  * @param objectSchema an optional object schema
  * @return {PropertyDecorator}
+ *
+ * @example
+ * ```typescript
+ *    \@nested(an.object().required('Job is required'))
+ *    job: Job;
+ * ```
  */
 function nested(objectSchema?: ObjectSchema<AnyObject>): PropertyDecorator {
   return (target, property) => {
@@ -199,7 +279,7 @@ type IValidatePathArguments = {
  * @param {object} args.object the object to validate
  * @param {ValidateOptions} args.options validate options
  */
-export function validate({ schemaName, object, options }: IValidateArguments) {
+function validate({ schemaName, object, options }: IValidateArguments) {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validate(object, options);
 }
@@ -213,11 +293,7 @@ export function validate({ schemaName, object, options }: IValidateArguments) {
  * @param args.options validate options
  * @return {IValidateArguments}
  */
-export function validateSync({
-  schemaName,
-  object,
-  options,
-}: IValidateArguments) {
+function validateSync({ schemaName, object, options }: IValidateArguments) {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validateSync(object, options);
 }
@@ -370,6 +446,8 @@ export {
   a,
   an,
   isValid,
+  validate,
+  validateSync,
   validateSyncAt,
   validateAt,
   nested,
