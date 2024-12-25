@@ -15,7 +15,7 @@ const metadataStorage = new MetadataStorage();
 // named schema
 const _schemas: { [key: string]: ObjectSchema<AnyObject> } = {};
 
-// unnamed schema
+// unnamed and named schema
 const _allSchemas = new Map<Function, ObjectSchema<AnyObject>>();
 
 /**
@@ -42,8 +42,8 @@ function getSchemaByType(target: Object): ObjectSchema<AnyObject> {
 /**
  * Register a new named schema
  *
- * @param name the schema name
- * @param objectSchema The initial schema
+ * @param {string} name the schema name
+ * @param {ObjectSchema<AnyObject>} objectSchema The initial schema
  */
 function namedSchema(
   name: string,

@@ -8,7 +8,8 @@
     "src"
   ],
   "engines": {
-    "node": ">=10"
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
   },
   "scripts": {
     "start": "tsdx watch",
@@ -58,6 +59,6 @@
     "yup": "^1.0.0"
   },
   "peerDependencies": {
-    "yup": "^0.27.0"
+    "yup": "^1.0.0"
   }
 }
