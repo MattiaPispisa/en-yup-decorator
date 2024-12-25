@@ -258,16 +258,27 @@ function _getObjectSchema(
   return getSchemaByType(type) ?? _defineSchema(type, yup.object<AnyObject>());
 }
 
-type IValidateArguments = {
-  object: object;
+type IValidateReturnType<
+  SchemaName extends string | Function | undefined,
+  Object
+> = SchemaName extends new (...args: any[]) => infer U ? U : Object;
+
+type IValidateArguments<
+  SchemaName extends string | Function | undefined,
+  Object extends object
+> = {
+  object: Object;
   options?: ValidateOptions;
-  schemaName?: string | Function;
+  schemaName?: SchemaName;
 };
 
-type IValidatePathArguments = {
-  object: object;
+type IValidatePathArguments<
+  SchemaName extends string | Function | undefined,
+  Object extends object
+> = {
+  object: Object;
   options?: ValidateOptions;
-  schemaName?: string | Function;
+  schemaName?: SchemaName;
   path: string;
 };
 
@@ -279,7 +290,16 @@ type IValidatePathArguments = {
  * @param {object} args.object the object to validate
  * @param {ValidateOptions} args.options validate options
  */
-function validate({ schemaName, object, options }: IValidateArguments) {
+function validate<
+  SchemaName extends string | Function | undefined,
+  Object extends object
+>({
+  schemaName,
+  object,
+  options,
+}: IValidateArguments<SchemaName, Object>): Promise<
+  IValidateReturnType<SchemaName, Object>
+> {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validate(object, options);
 }
@@ -293,7 +313,17 @@ function validate({ schemaName, object, options }: IValidateArguments) {
  * @param args.options validate options
  * @return {IValidateArguments}
  */
-function validateSync({ schemaName, object, options }: IValidateArguments) {
+function validateSync<
+  SchemaName extends string | Function | undefined,
+  Object extends object
+>({
+  schemaName,
+  object,
+  options,
+}: IValidateArguments<SchemaName, Object>): IValidateReturnType<
+  SchemaName,
+  Object
+> {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validateSync(object, options);
 }
@@ -307,12 +337,17 @@ function validateSync({ schemaName, object, options }: IValidateArguments) {
  * @param args.object the object to validate
  * @param args.options validate options
  */
-function validateAt({
+function validateAt<
+  SchemaName extends string | Function | undefined,
+  Object extends object
+>({
   schemaName,
   path,
   object,
   options,
-}: IValidatePathArguments) {
+}: IValidatePathArguments<SchemaName, Object>): Promise<
+  IValidateReturnType<SchemaName, Object>
+> {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validateAt(path, object, options);
 }
@@ -326,12 +361,18 @@ function validateAt({
  * @param args.object the object to validate
  * @param args.options validate options
  */
-function validateSyncAt({
+function validateSyncAt<
+  SchemaName extends string | Function | undefined,
+  Object extends object
+>({
   schemaName,
   path,
   object,
   options,
-}: IValidatePathArguments) {
+}: IValidatePathArguments<SchemaName, Object>): IValidateReturnType<
+  SchemaName,
+  Object
+> {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validateSyncAt(path, object, options);
 }
@@ -345,7 +386,14 @@ function validateSyncAt({
  * @param args.options validate options
  * @returns whether the object is valid
  */
-function isValid({ schemaName, object, options }: IValidateArguments) {
+function isValid<
+  SchemaName extends string | Function | undefined,
+  Object extends object
+>({
+  schemaName,
+  object,
+  options,
+}: IValidateArguments<SchemaName, Object>): Promise<boolean> {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.isValid(object, options);
 }
@@ -358,7 +406,14 @@ function isValid({ schemaName, object, options }: IValidateArguments) {
  * @param args.options validate options
  * @returns whether the object is valid
  */
-function isValidSync({ schemaName, object, options }: IValidateArguments) {
+function isValidSync<
+  SchemaName extends string | Function | undefined,
+  Object extends object
+>({
+  schemaName,
+  object,
+  options,
+}: IValidateArguments<SchemaName, Object>): boolean {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.isValidSync(object, options);
 }
@@ -372,7 +427,17 @@ function isValidSync({ schemaName, object, options }: IValidateArguments) {
  * @param args.options validate options
  * @returns the object that has been transformed
  */
-function cast({ schemaName, object, options }: IValidateArguments) {
+function cast<
+  SchemaName extends string | Function | undefined,
+  Object extends object
+>({
+  schemaName,
+  object,
+  options,
+}: IValidateArguments<SchemaName, Object>): IValidateReturnType<
+  SchemaName,
+  Object
+> {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.cast(object, options);
 }
@@ -456,4 +521,5 @@ export {
   is,
   IValidateArguments,
   IValidatePathArguments,
+  IValidateReturnType,
 };
