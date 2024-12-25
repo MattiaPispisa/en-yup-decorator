@@ -1,5 +1,6 @@
-import { is, a, namedSchema, nestedType } from '../../src/index';
+import { is, a, namedSchema, nestedType, schema } from '../../src/index';
 
+@schema()
 export class Address {
   constructor(args: { location: string }) {
     this.location = args.location;

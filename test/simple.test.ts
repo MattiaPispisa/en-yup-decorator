@@ -10,7 +10,8 @@ import {
   validateSyncAt,
 } from '../src/index';
 import { Person } from './models/person';
-import { House } from './models/house';
+import { Address, House } from './models/house';
+import { User } from './models/user';
 
 describe('validate simple object', function() {
   describe('test validate', function() {
@@ -84,6 +85,38 @@ describe('validate simple object', function() {
           'age must be greater than 0',
           'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
         ],
+      });
+    });
+
+    it('should throw error validating null object', async () => {
+      expect(() =>
+        validate({ object: null, schemaName: Person } as any)
+      ).toThrow(
+        expect.objectContaining(new Error('Cannot validate non object types'))
+      );
+    });
+
+    it('should allow valid objects', async () => {
+      const object = getValidPerson();
+      const actual = await validate({ object, schemaName: Person });
+      expect(actual).toBe(object);
+    });
+  });
+
+  describe('test validate class without schema properties', function() {
+    it('should allow valid objects', async () => {
+      const object = new User({ name: 'Mattia' });
+      const actual = await validate({ object, schemaName: 'user' });
+      expect(actual).toBe(object);
+    });
+
+    it('should reject invalid objects', async () => {
+      const object = new User({ name: '' });
+      await expect(
+        validate({ object, schemaName: User })
+      ).rejects.toMatchObject({
+        name: 'ValidationError',
+        errors: ['Name is required'],
       });
     });
   });
@@ -286,7 +319,7 @@ function getValidPerson({
     age: ifNullOrUndefined(age, 20),
     email: ifNullOrUndefined(email, 'test@gmail.com'),
     house: new House({
-      address: { location: ifNullOrUndefined(address, 'Italy') },
+      address: new Address({ location: ifNullOrUndefined(address, 'Italy') }),
       type: ifNullOrUndefined(houseType, 'VILLA'),
     }),
   });
@@ -310,7 +343,7 @@ function getInvalidPerson({
     house: includesHouse
       ? new House({
           type: ifNullOrUndefined(houseType, 'HOUSE'),
-          address: { location: 'Italy' },
+          address: new Address({ location: 'Italy' }),
         })
       : undefined,
   });

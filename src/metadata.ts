@@ -1,4 +1,4 @@
-import {  Schema } from 'yup';
+import { Schema } from 'yup';
 import {
   TargetClass,
   TargetPropertiesSchemas,
@@ -53,10 +53,10 @@ export class MetadataStorage {
       return null;
     }
 
-    let iterator: Array<[PropertyName, PropertySchema]> = [];
-    iterator = iterator.concat(
-      ...inheritanceMaps.map(map => Array.from(map.entries()))
-    );
+    const iterator: Array<[
+      PropertyName,
+      PropertySchema
+    ]> = inheritanceMaps.flatMap(map => Array.from(map.entries()));
 
     const schemaMap = new Map<PropertyName, Schema<any>>(iterator);
 

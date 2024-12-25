@@ -418,6 +418,7 @@ function _defineSchema(
   const schemaMap = metadataStorage.findSchemaMetadata(target);
 
   if (!schemaMap) {
+    _allSchemas.set(target, objectSchema);
     return objectSchema;
   }
 
