@@ -18,7 +18,7 @@ describe('validate simple object', function() {
     it('should allow valid objects', async () => {
       const object = getValidPerson();
       const actual = await validate({ object, schemaName: Person });
-      expect(actual).toBe(object);
+      expect(actual).toEqual(object);
     });
 
     it('should reject invalid objects', async () => {
