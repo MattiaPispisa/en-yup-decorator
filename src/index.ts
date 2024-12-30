@@ -111,7 +111,7 @@ type SchemaOptions = {
  * Register a new named schema
  *
  * @param {string} name the schema name
- * @param {ObjectSchema<AnyObject>} objectSchema The initial schema
+ * @param {SchemaOptions} options schema options
  *
  * @example
  *
@@ -137,7 +137,7 @@ function namedSchema(name: string, options?: SchemaOptions): ClassDecorator {
 /**
  * Register a schema
  *
- * @param {ObjectSchema} objectSchema The initial schema
+ * @param {SchemaOptions} options schema options
  * @return {ClassDecorator} The class decorator
  *
  * @example
@@ -301,6 +301,27 @@ type IValidatePathArguments = {
  * @param {string | Function} args.schemaName the name of the schema to use
  * @param {object} args.object the object to validate
  * @param {ValidateOptions} args.options validate options
+ * @example
+ * ```typescript
+ * import { validate } from 'yup-decorator';
+ *
+ * const user = new User({ email: 'test', age: 27 });
+ *
+ *  validate({
+ *    object: user,
+ *    options: {
+ *      strict: true,
+ *      abortEarly: false,
+ *    },
+ *  }).then(err => {
+ *    // err.name; // => 'ValidationError'
+ *    // err.errors; // => ['Not a valid email']
+ *  });
+ *
+ *  // you can also pass in the schema name as a string or a constructor
+ *  validate({ object: user, schemaName: 'user' });
+ *  validate({ object: user, schemaName: User });
+ * ```
  */
 function validate({ schemaName, object, options }: IValidateArguments) {
   const objectSchema = _getSchema({ object, schemaName });
@@ -315,6 +336,28 @@ function validate({ schemaName, object, options }: IValidateArguments) {
  * @param args.object the object to validate
  * @param args.options validate options
  * @return {IValidateArguments}
+ *
+ * @example
+ * ```typescript
+ * import { validate } from 'yup-decorator';
+ *
+ * const user = new User({ email: 'test', age: 27 });
+ *
+ *  validate({
+ *    object: user,
+ *    options: {
+ *      strict: true,
+ *      abortEarly: false,
+ *    },
+ *  }).then(err => {
+ *    // err.name; // => 'ValidationError'
+ *    // err.errors; // => ['Not a valid email']
+ *  });
+ *
+ *  // you can also pass in the schema name as a string or a constructor
+ *  validateSync({ object: user, schemaName: 'user' });
+ *  validateSync({ object: user, schemaName: User });
+ * ```
  */
 function validateSync({ schemaName, object, options }: IValidateArguments) {
   const objectSchema = _getSchema({ object, schemaName });
@@ -329,6 +372,29 @@ function validateSync({ schemaName, object, options }: IValidateArguments) {
  * @param args.path the property path
  * @param args.object the object to validate
  * @param args.options validate options
+ *
+ * @example
+ *
+ * ```typescript
+ * import { validate } from 'yup-decorator';
+ *
+ * const user = new User({ email: 'test', age: 27 });
+ *
+ *  validate({
+ *    object: user,
+ *    options: {
+ *      strict: true,
+ *      abortEarly: false,
+ *    },
+ *  }).then(err => {
+ *    // err.name; // => 'ValidationError'
+ *    // err.errors; // => ['Not a valid email']
+ *  });
+ *
+ *  // you can also pass in the schema name as a string or a constructor
+ *  validateAt({ object: user, schemaName: 'user', path: 'email' });
+ *  validateAt({ object: user, schemaName: User, path: 'email' });
+ * ```
  */
 function validateAt({
   schemaName,
@@ -348,6 +414,29 @@ function validateAt({
  * @param args.path the property path
  * @param args.object the object to validate
  * @param args.options validate options
+ *
+ * @example
+ *
+ * ```typescript
+ * import { validate } from 'yup-decorator';
+ *
+ * const user = new User({ email: 'test', age: 27 });
+ *
+ *  validate({
+ *    object: user,
+ *    options: {
+ *      strict: true,
+ *      abortEarly: false,
+ *    },
+ *  }).then(err => {
+ *    // err.name; // => 'ValidationError'
+ *    // err.errors; // => ['Not a valid email']
+ *  });
+ *
+ *  // you can also pass in the schema name as a string or a constructor
+ *  validateSyncAt({ object: user, schemaName: 'user', path: 'email' });
+ *  validateSyncAt({ object: user, schemaName: User, path: 'email' });
+ * ```
  */
 function validateSyncAt({
   schemaName,
@@ -367,6 +456,29 @@ function validateSyncAt({
  * @param args.object the object to validate
  * @param args.options validate options
  * @returns whether the object is valid
+ *
+ * @example
+ *
+ * ```typescript
+ * import { validate } from 'yup-decorator';
+ *
+ * const user = new User({ email: 'test', age: 27 });
+ *
+ *  validate({
+ *    object: user,
+ *    options: {
+ *      strict: true,
+ *      abortEarly: false,
+ *    },
+ *  }).then(err => {
+ *    // err.name; // => 'ValidationError'
+ *    // err.errors; // => ['Not a valid email']
+ *  });
+ *
+ *  // you can also pass in the schema name as a string or a constructor
+ *  isValid({ object: user, schemaName: 'user' });
+ *  isValid({ object: user, schemaName: User });
+ * ```
  */
 function isValid({
   schemaName,
@@ -384,6 +496,29 @@ function isValid({
  * @param args.object the object to validate
  * @param args.options validate options
  * @returns whether the object is valid
+ *
+ * @example
+ *
+ * ```typescript
+ * import { validate } from 'yup-decorator';
+ *
+ * const user = new User({ email: 'test', age: 27 });
+ *
+ *  validate({
+ *    object: user,
+ *    options: {
+ *      strict: true,
+ *      abortEarly: false,
+ *    },
+ *  }).then(err => {
+ *    // err.name; // => 'ValidationError'
+ *    // err.errors; // => ['Not a valid email']
+ *  });
+ *
+ *  // you can also pass in the schema name as a string or a constructor
+ *  isValidSync({ object: user, schemaName: 'user' });
+ *  isValidSync({ object: user, schemaName: User });
+ * ```
  */
 function isValidSync({
   schemaName,
@@ -480,6 +615,8 @@ function _defineSchema(
   const { compose, useTargetClass } = options;
 
   const schemaMap = metadataStorage.findSchemaMetadata(target);
+
+  // compose shape
   const objectShape: Record<string, Schema<any>> = Array.from(
     schemaMap?.entries() ?? []
   ).reduce((currentShape, [property, schema]) => {
@@ -489,6 +626,7 @@ function _defineSchema(
   let targetSchema: Schema;
 
   if (useTargetClass) {
+    // to be a class instance must be a mixed schema
     targetSchema = yup
       .mixed((input): input is typeof target => input instanceof target)
       .transform((value, _, ctx) => {

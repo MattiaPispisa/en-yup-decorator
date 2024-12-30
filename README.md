@@ -81,7 +81,7 @@ export class NestedModel {
 ```typescript
 import { validate } from 'yup-decorator';
 
-const user = new User({ email: 'vdtn359', age: 23 });
+const user = new User({ email: 'test', age: 27 });
 
 validate({
   object: user,
@@ -125,9 +125,9 @@ This will coerce the property's value according to its type
 
 ```typescript
 import { cast } from 'yup-decorator';
-const user = new User({ email: 'test', age: '18' });
+const user = new User({ email: 'test', age: '27' });
 const result = cast({ object: user });
-result; // {email: 'test@gmail.com', age: 18 }
+result; // {email: 'test@gmail.com', age: 27 }
 ```
 
 The sync version is `isValidSync`

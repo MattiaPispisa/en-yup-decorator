@@ -1,5 +1,7 @@
 {
+  "name": "en-yup-decorator",
   "version": "0.1.0",
+  "description": "A TypeScript library for creating yup schema decorators, simplifying schema validations.",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -7,6 +9,27 @@
     "dist",
     "src"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MattiaPispisa/en-yup-decorator"
+  },
+  "keywords": [
+    "typescript",
+    "yup",
+    "decorators",
+    "validation",
+    "schema",
+    "yup-decorators"
+  ],
+  "author": {
+    "name": "Mattia Pispisa",
+    "email": "mattia.pispisa@gmail.com",
+    "url": "https://mattiapispisa.it"
+  },
+  "homepage": "https://github.com/MattiaPispisa/en-yup-decorator#readme",
+  "bugs": {
+    "url": "https://github.com/MattiaPispisa/en-yup-decorator/issues"
+  },
   "engines": {
     "node": ">=14.0.0",
     "npm": ">=6.0.0"
@@ -33,8 +56,6 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "en-yup-decorator",
-  "author": "Mattia Pispisa",
   "module": "dist/en-yup-decorator.esm.js",
   "size-limit": [
     {
