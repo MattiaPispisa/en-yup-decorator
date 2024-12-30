@@ -1,10 +1,4 @@
-import {
-  AnyObject,
-  ArraySchema,
-  ObjectSchema,
-  Schema,
-  ValidateOptions,
-} from 'yup';
+import { ArraySchema, Schema, ValidateOptions } from 'yup';
 import 'reflect-metadata';
 import * as yup from 'yup';
 
@@ -13,16 +7,15 @@ import { MetadataStorage } from './metadata';
 const metadataStorage = new MetadataStorage();
 
 // named schema
-const _schemas: { [key: string]: ObjectSchema<AnyObject> } = {};
+const _schemas: { [key: string]: Schema<any> } = {};
 
 // unnamed and named schema
-const _allSchemas = new Map<Function, ObjectSchema<AnyObject>>();
+const _allSchemas = new Map<Function, Schema<any>>();
 
 /**
  * Get the schema by name
  *
  * @param {string} name Name of the schema
- * @returns {ObjectSchema<AnyObject>} The yup schema
  *
  * @example
  * ```typescript
@@ -36,7 +29,7 @@ const _allSchemas = new Map<Function, ObjectSchema<AnyObject>>();
  * const userSchema = getNamedSchema('user');
  * ```
  */
-function getNamedSchema(name: string): ObjectSchema<AnyObject> {
+function getNamedSchema(name: string): Schema<any> {
   return _schemas[name]!;
 }
 
@@ -44,7 +37,6 @@ function getNamedSchema(name: string): ObjectSchema<AnyObject> {
  * Get the schema by type
  *
  * @param {Object} target the object's type (class)
- * @returns {ObjectSchema<AnyObject>} The yup schema
  *
  * @example
  * ```typescript
@@ -57,10 +49,63 @@ function getNamedSchema(name: string): ObjectSchema<AnyObject> {
  * const userSchema = getSchemaByType(User);
  * ```
  */
-function getSchemaByType(target: Object): ObjectSchema<AnyObject> {
+function getSchemaByType(target: Object): Schema<any> {
   const constructor = target instanceof Function ? target : target.constructor;
   return _allSchemas.get(constructor)!;
 }
+
+type SchemaOptions = {
+  /**
+   * During validation, the object type is checked, and if it is not an instance of the target object, a new instance is created.
+   * In this case, the constructor is called with the already validated properties.
+   *
+   * **Defining a constructor is required.**
+   *
+   * @default false
+   *
+   * @example
+   * ```typescript
+   *    \@schema({ useTargetClass: true })
+   *    class User {
+   *      constructor(args: { name: string; job: Job; birthday: Date }) {
+   *        this.name = args.name;
+   *        this.job = args.job;
+   *        this.birthday = args.birthday;
+   *      }
+   *
+   *      \@is(a.string().required())
+   *      name: string;
+   *
+   *      \@is(a.date().required())
+   *      birthday: Date;
+   *
+   *      \@nestedType(
+   *        () => Job,
+   *        s => s.required()
+   *      )
+   *      job: Job;
+   *  }
+   *
+   * void main() {
+   *   const user: User = await validate({
+   *      object: {
+   *        job: { name: 'Dev' },
+   *        name: 'Mattia',
+   *        birthday: new Date().toString(),
+   *      },
+   *      schemaName: User,
+   *   });
+   *
+   *  console.log(
+   *    user instanceof User,
+   *    user.birthday instanceof Date,
+   *    user.job instanceof Job
+   *  ); // true, true, true
+   * }
+   * ```
+   */
+  useTargetClass?: boolean;
+};
 
 /**
  * Register a new named schema
@@ -81,13 +126,11 @@ function getSchemaByType(target: Object): ObjectSchema<AnyObject> {
  * const userSchema = getNamedSchema('user');
  * ```
  */
-function namedSchema(
-  name: string,
-  objectSchema: ObjectSchema<AnyObject> = yup.object<AnyObject>()
-): ClassDecorator {
+function namedSchema(name: string, options?: SchemaOptions): ClassDecorator {
   return target => {
-    objectSchema = _defineSchema(target, objectSchema);
-    _schemas[name] = objectSchema;
+    _schemas[name] = _defineSchema(target, {
+      useTargetClass: options?.useTargetClass,
+    });
   };
 }
 
@@ -108,11 +151,11 @@ function namedSchema(
  * const userSchema = getSchemaByType(User);
  * ```
  */
-function schema(
-  objectSchema: ObjectSchema<AnyObject> = yup.object<AnyObject>()
-): ClassDecorator {
+function schema(options?: SchemaOptions): ClassDecorator {
   return target => {
-    _defineSchema(target, objectSchema);
+    _defineSchema(target, {
+      useTargetClass: options?.useTargetClass,
+    });
   };
 }
 
@@ -152,7 +195,6 @@ function is(schema: Schema<any>): PropertyDecorator {
  *
  * @param {() => Function} typeFunction a function that returns type of the element
  * @param {ArraySchema} arraySchema the array schema
- * @param {ObjectSchema} elementSchema an optional object schema
  *
  * @example
  * ```typescript
@@ -163,11 +205,13 @@ function is(schema: Schema<any>): PropertyDecorator {
 function nestedArray(
   typeFunction: () => Function,
   arraySchema: ArraySchema<any, any> = yup.array(),
-  elementSchema?: ObjectSchema<AnyObject>
+  elementSchema?: (schema: Schema) => Schema
 ): PropertyDecorator {
   return (target, property) => {
     const nestedType = typeFunction();
-    const nestedElementSchema = _getObjectSchema(nestedType, elementSchema);
+    const nestedElementSchema = _getObjectSchema(nestedType, {
+      compose: elementSchema,
+    });
 
     metadataStorage.addSchemaMetadata({
       target: target instanceof Function ? target : target.constructor,
@@ -181,7 +225,6 @@ function nestedArray(
  * Register an object schema to the given property. Use this when the property type is unknown
  *
  * @param {() => Function} typeFunction  a function that returns type of the element
- * @param {ObjectSchema} objectSchema an optional object schema
  *
  * @example
  * ```typescript
@@ -191,11 +234,13 @@ function nestedArray(
  */
 function nestedType(
   typeFunction: () => Function,
-  objectSchema?: ObjectSchema<AnyObject>
+  elementSchema?: (schema: Schema) => Schema
 ): PropertyDecorator {
   return (target, property) => {
     const nestedType = typeFunction();
-    const nestedSchema = _getObjectSchema(nestedType, objectSchema);
+    const nestedSchema = _getObjectSchema(nestedType, {
+      compose: elementSchema,
+    });
 
     metadataStorage.addSchemaMetadata({
       target: target instanceof Function ? target : target.constructor,
@@ -218,7 +263,7 @@ function nestedType(
  *    job: Job;
  * ```
  */
-function nested(objectSchema?: ObjectSchema<AnyObject>): PropertyDecorator {
+function nested(schema?: (schema: Schema) => Schema): PropertyDecorator {
   return (target, property) => {
     const nestedType = (Reflect as any).getMetadata(
       'design:type',
@@ -226,7 +271,7 @@ function nested(objectSchema?: ObjectSchema<AnyObject>): PropertyDecorator {
       property
     );
 
-    const nestedSchema = _getObjectSchema(nestedType, objectSchema);
+    const nestedSchema = _getObjectSchema(nestedType, { compose: schema });
 
     metadataStorage.addSchemaMetadata({
       target: target instanceof Function ? target : target.constructor,
@@ -234,28 +279,6 @@ function nested(objectSchema?: ObjectSchema<AnyObject>): PropertyDecorator {
       schema: nestedSchema,
     });
   };
-}
-
-/**
- * Get the object schema
- *
- * @param {Object} type the object type
- * @param {ObjectSchema} predefinedObjectSchema object schema to use,
- * if undefined, it will pick the schema from the type
- *
- * @returns {ObjectSchema}
- */
-function _getObjectSchema(
-  type: Function,
-  predefinedObjectSchema?: ObjectSchema<AnyObject>
-): ObjectSchema<AnyObject> {
-  if (predefinedObjectSchema) {
-    return _defineSchema(type, predefinedObjectSchema.clone());
-  }
-
-  // if there is no explicit object schema specified,
-  // try getting it from the type else build one for it automatically.
-  return getSchemaByType(type) ?? _defineSchema(type, yup.object<AnyObject>());
 }
 
 type IValidateArguments = {
@@ -410,6 +433,37 @@ function _getSchema({
   return getSchemaByType(schemaName ?? object.constructor);
 }
 
+type _GetSchemaOptions = {
+  compose?: (schema: Schema) => Schema;
+};
+
+/**
+ * Get the object schema
+ *
+ * @param {Object} type the object type
+ * if undefined, it will pick the schema from the type
+ *
+ * @returns {ObjectSchema}
+ */
+function _getObjectSchema(
+  type: Function,
+  options: _GetSchemaOptions
+): Schema<any> {
+  const { compose } = options;
+  const schemaByType = getSchemaByType(type);
+
+  if (schemaByType) {
+    return compose?.(schemaByType) ?? schemaByType;
+  }
+
+  return _defineSchema(type, options);
+}
+
+type _DefineSchemaOptions = {
+  compose?: (schema: Schema) => Schema;
+  useTargetClass?: boolean;
+};
+
 /**
  * Compose object schema from metadata properties schemas
  *
@@ -421,24 +475,41 @@ function _getSchema({
  */
 function _defineSchema(
   target: Function,
-  objectSchema: ObjectSchema<AnyObject>
-): ObjectSchema<AnyObject> {
+  options: _DefineSchemaOptions
+): Schema<any> {
+  const { compose, useTargetClass } = options;
+
   const schemaMap = metadataStorage.findSchemaMetadata(target);
-
-  if (!schemaMap) {
-    _allSchemas.set(target, objectSchema);
-    return objectSchema;
-  }
-
   const objectShape: Record<string, Schema<any>> = Array.from(
-    schemaMap.entries()
+    schemaMap?.entries() ?? []
   ).reduce((currentShape, [property, schema]) => {
     return { ...currentShape, [property]: schema };
   }, {});
 
-  const schemaWithMetadata = objectSchema.shape(objectShape);
-  _allSchemas.set(target, schemaWithMetadata);
-  return schemaWithMetadata;
+  let targetSchema: Schema;
+
+  if (useTargetClass) {
+    targetSchema = yup
+      .mixed((input): input is typeof target => input instanceof target)
+      .transform((value, _, ctx) => {
+        const validData = a
+          .object(objectShape)
+          .validateSync(value, { abortEarly: false, strict: false });
+
+        if (ctx.isType(validData)) {
+          return validData;
+        }
+
+        return new (target as any)(validData);
+      });
+  } else {
+    targetSchema = yup.object(objectShape);
+  }
+
+  const composed = compose?.(targetSchema) ?? targetSchema;
+
+  _allSchemas.set(target, composed);
+  return composed;
 }
 
 const a = yup;

@@ -1,14 +1,12 @@
-import { a, namedSchema } from '../../src/index';
+import { a, is, namedSchema } from '../../src/index';
 
-@namedSchema(
-  'user',
-  a.object({ name: a.string().required('Name is required') })
-)
+@namedSchema('user', { useTargetClass: true })
 class User {
   constructor(args: { name: string }) {
     this.name = args.name;
   }
 
+  @is(a.string().required('Name is required'))
   public name: string;
 }
 

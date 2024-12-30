@@ -1,7 +1,5 @@
 import {
   cast,
-  getNamedSchema,
-  getSchemaByType,
   isValid,
   isValidSync,
   validate,
@@ -103,15 +101,42 @@ describe('validate simple object', function() {
     });
   });
 
-  describe('test validate class without schema properties', function() {
-    it('should allow valid objects', async () => {
+  describe('preserve class instances', function() {
+    it('should convert valid objects in instances', async () => {
+      const object = { name: 'Mattia' };
+      const actual = await validate({
+        object,
+        schemaName: 'user',
+      });
+
+      expect(object).toEqual(actual);
+      expect(actual instanceof User).toBe(true);
+    });
+
+    it('should convert valid objects in instances', async () => {
+      const object = { name: 'Mattia' };
+      const actual = await validate({
+        object,
+        schemaName: User,
+      });
+
+      expect(object).toEqual(actual);
+      expect(actual instanceof User).toBe(true);
+    });
+
+    it('should preserve instances', async () => {
       const object = new User({ name: 'Mattia' });
-      const actual = await validate({ object, schemaName: 'user' });
-      expect(actual).toBe(object);
+      const actual = await validate({
+        object,
+        schemaName: User,
+      });
+
+      expect(object).toBe(actual);
+      expect(actual instanceof User).toBe(true);
     });
 
     it('should reject invalid objects', async () => {
-      const object = new User({ name: '' });
+      const object = { name: '' };
       await expect(
         validate({ object, schemaName: User })
       ).rejects.toMatchObject({
@@ -284,23 +309,6 @@ describe('Testing cast', function() {
         },
       });
     });
-  });
-});
-
-describe('Testing getSchema', function() {
-  it('should get schema by name', () => {
-    expect(Object.keys(getNamedSchema('person').describe().fields)).toEqual([
-      'email',
-      'age',
-      'house',
-    ]);
-  });
-
-  it('should get schema by type', () => {
-    expect(Object.keys(getSchemaByType(House).describe().fields)).toEqual([
-      'address',
-      'type',
-    ]);
   });
 });
 

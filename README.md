@@ -4,7 +4,7 @@ Added TypeScript decorators support for [yup](https://github.com/jquense/yup)
 
 ### Preface
 
-This library is a continuation of `yup-decorators`, enhanced with support for the latest versions of `yup` and `TypeScript`. I would like to thank the original creators of yup-decorators for their excellent work in providing a powerful and flexible way to work with yup schemas. This version aims to bring the same functionality while keeping up with updates to yup and modern TypeScript features, offering an improved and more seamless experience.
+This library is a continuation of `yup-decorators`, enhanced with support for the latest versions of `yup` and `TypeScript`. I would like to thank the original creators of yup-decorators for their excellent work in providing a powerful and flexible way to work with yup schemas. This version aims to bring the same functionality while keeping up with updates to yup and modern TypeScript features, offering an improved and more seamless experience ([diff](#from-yup-decorators)).
 
 ### Usage
 
@@ -54,7 +54,7 @@ const userSchema = getSchemaByType(User);
 ```typescript
 import { is, a, an, nested, schema } from 'yup-decorator';
 
-@schema(an.object().required())
+@schema()
 export class NestedChildModel {
   @is(a.string().uppercase())
   uppercase: string;
@@ -125,9 +125,65 @@ This will coerce the property's value according to its type
 
 ```typescript
 import { cast } from 'yup-decorator';
-const user = new User({ email: 'vdtn359', age: '18' });
+const user = new User({ email: 'test', age: '18' });
 const result = cast({ object: user });
-result; // {email: 'vdtn359@gmail.com', age: 18 }
+result; // {email: 'test@gmail.com', age: 18 }
 ```
 
 The sync version is `isValidSync`
+
+### Class instantiations
+
+```typescript
+@schema({ useTargetClass: true })
+class Job {
+  constructor(args: { name: string }) {
+    this.name = args.name;
+  }
+
+  @is(a.string().required())
+  name: string;
+}
+
+@schema({ useTargetClass: true })
+class User {
+  constructor(args: { name: string; job: Job; birthday: Date }) {
+    this.name = args.name;
+    this.job = args.job;
+    this.birthday = args.birthday;
+  }
+
+  @is(a.string().required())
+  name: string;
+
+  @is(a.date().required())
+  birthday: Date;
+
+  @nestedType(
+    () => Job,
+    s => s.required()
+  )
+  job: Job;
+}
+
+const user: User = await validate({
+  object: {
+    job: { name: 'Dev' },
+    name: 'Mattia',
+    birthday: new Date().toString(),
+  },
+  schemaName: User,
+});
+
+console.log(
+  user instanceof User,
+  user.birthday instanceof Date,
+  user.job instanceof Job
+); // true, true, true
+```
+
+### From yup-decorators
+
+The main differences from `yup-decorators` are that schemas (@schema, @namedSchema) are not necessarily objects, so it is no longer possible to annotate a class as an object directly (~~@namedSchema(a.object().required)~~). Instead, there is a callback to enrich the generated schema (@namedSchema((s) => s.required())). This change is due to the ability to convert objects into instances of the target class during validation (`useTargetClass`), which requires the use of a “mixed” type. Tests and an example are provided to demonstrate this functionality.
+
+The dependencies have been updated, and a version of `yup` >= 1.0.0 is now required.

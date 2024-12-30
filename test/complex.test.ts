@@ -1,4 +1,4 @@
-import { validate, getNamedSchema, getSchemaByType } from '../src/index';
+import { validate } from '../src/index';
 import { Employee } from './models/employee';
 import { Address, House } from './models/house';
 import { Job } from './models/job';
@@ -153,28 +153,6 @@ describe('validate complex object', function() {
         ],
       });
     });
-  });
-});
-
-describe('Testing getSchema', function() {
-  it('should get schema by name', () => {
-    expect(Object.keys(getNamedSchema('employee').describe().fields)).toEqual([
-      'email',
-      'age',
-      'house',
-      'job',
-      'employeeId',
-    ]);
-  });
-
-  it('should get schema by type', () => {
-    expect(Object.keys(getSchemaByType(Employee).describe().fields)).toEqual([
-      'email',
-      'age',
-      'house',
-      'job',
-      'employeeId',
-    ]);
   });
 });
 
