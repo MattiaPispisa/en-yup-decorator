@@ -1,6 +1,6 @@
 {
   "name": "en-yup-decorator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A TypeScript library for creating yup schema decorators, simplifying schema validations.",
   "license": "MIT",
   "main": "dist/index.js",
