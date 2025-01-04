@@ -184,6 +184,6 @@ console.log(
 
 ### From yup-decorators
 
-The main differences from `yup-decorators` are that schemas (@schema, @namedSchema) are not necessarily objects, so it is no longer possible to annotate a class as an object directly (~~@namedSchema(a.object().required)~~). Instead, there is a callback to enrich the generated schema (@namedSchema((s) => s.required())). This change is due to the ability to convert objects into instances of the target class during validation (`useTargetClass`), which requires the use of a “mixed” type. Tests and an example are provided to demonstrate this functionality.
+The main differences from `yup-decorators` are that schemas (@schema, @namedSchema) creates instances of `EnYupSchema`, so it is no longer possible to annotate a class as an object directly (~~@namedSchema(a.object().required)~~). Instead, there is a callback to enrich the generated schema (@namedSchema((s) => s.required())). This change is due to the ability to convert objects into instances of the target class during validation (`useTargetClass`). Tests and an example are provided to demonstrate this functionality.
 
 The dependencies have been updated, and a version of `yup` >= 1.0.0 is now required.

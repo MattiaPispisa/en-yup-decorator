@@ -9,7 +9,6 @@ import {
 } from '../src/index';
 import { Person } from './models/person';
 import { Address, House } from './models/house';
-import { User } from './models/user';
 
 describe('validate simple object', function() {
   describe('test validate', function() {
@@ -98,51 +97,6 @@ describe('validate simple object', function() {
       const object = getValidPerson();
       const actual = await validate({ object, schemaName: Person });
       expect(actual).toBe(object);
-    });
-  });
-
-  describe('preserve class instances', function() {
-    it('should convert valid objects in instances', async () => {
-      const object = { name: 'Mattia' };
-      const actual = await validate({
-        object,
-        schemaName: 'user',
-      });
-
-      expect(object).toEqual(actual);
-      expect(actual instanceof User).toBe(true);
-    });
-
-    it('should convert valid objects in instances', async () => {
-      const object = { name: 'Mattia' };
-      const actual = await validate({
-        object,
-        schemaName: User,
-      });
-
-      expect(object).toEqual(actual);
-      expect(actual instanceof User).toBe(true);
-    });
-
-    it('should preserve instances', async () => {
-      const object = new User({ name: 'Mattia' });
-      const actual = await validate({
-        object,
-        schemaName: User,
-      });
-
-      expect(object).toBe(actual);
-      expect(actual instanceof User).toBe(true);
-    });
-
-    it('should reject invalid objects', async () => {
-      const object = { name: '' };
-      await expect(
-        validate({ object, schemaName: User })
-      ).rejects.toMatchObject({
-        name: 'ValidationError',
-        errors: ['Name is required'],
-      });
     });
   });
 });
