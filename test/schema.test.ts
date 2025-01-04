@@ -23,11 +23,7 @@ describe('EnYupSchema method ', () => {
     });
 
     it('should preserve instances', async () => {
-      const birthday = new Date(1997, 11, 12);
-      const object = new User({
-        name: 'Mattia',
-        birthday,
-      });
+      const object = getValidUser();
       const actual = await validate({
         object,
         schemaName: User,
