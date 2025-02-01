@@ -1,12 +1,17 @@
-## En Yup Decorators
+# En Yup Decorators
 
 Added TypeScript decorators support for [yup](https://github.com/jquense/yup)
 
-### Preface
+1. [Preface](#preface)
+1. [Usage](#usage)
+    1. [Class instantiation](#class-instantiation)
+1. [From yup-decorators](#from-yup-decorators)
+
+## Preface
 
 This library is a continuation of `yup-decorators`, enhanced with support for the latest versions of `yup` and `TypeScript`. I would like to thank the original creators of yup-decorators for their excellent work in providing a powerful and flexible way to work with yup schemas. This version aims to bring the same functionality while keeping up with updates to yup and modern TypeScript features, offering an improved and more seamless experience ([diff](#from-yup-decorators)).
 
-### Usage
+## Usage
 
 - Named schema
 
@@ -132,7 +137,7 @@ result; // {email: 'test@gmail.com', age: 27 }
 
 The sync version is `isValidSync`
 
-### Class instantiations
+### Class instantiation
 
 ```typescript
 @schema({ useTargetClass: true })
@@ -182,7 +187,35 @@ console.log(
 ); // true, true, true
 ```
 
-### From yup-decorators
+## Example
+
+An example where each property uses one of the various provided APIs
+
+```typescript
+@schema()
+class Person {
+  constructor(args: {}) {
+    ...
+  }
+
+  @is(a.string().required('Name is required')) // `is` let you register a schema to the given property
+  name: string
+
+  @nestedObject(() => Person) // `nestedRecord` let you register an object where each value is of the given property
+  contacts: Record<string,Person>
+
+  @nestedArray(() => House) // `nestedArray` let you register an array of the given type
+  houses: House[]
+
+  @nested() // `nested` infer the type if known
+  job: Job
+
+  nestedType(() => Country) // `nestedType` let you register an object schema to the given property
+  country: Country
+}
+```
+
+## From yup-decorators
 
 The main differences from `yup-decorators` are that schemas (@schema, @namedSchema) creates instances of `EnYupSchema`, so it is no longer possible to annotate a class as an object directly (~~@namedSchema(a.object().required)~~). Instead, there is a callback to enrich the generated schema (@namedSchema((s) => s.required())). This change is due to the ability to convert objects into instances of the target class during validation (`useTargetClass`). Tests and an example are provided to demonstrate this functionality.
 
