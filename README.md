@@ -2,9 +2,11 @@
 
 Added TypeScript decorators support for [yup](https://github.com/jquense/yup)
 
+## Table of Contents
 1. [Preface](#preface)
 1. [Usage](#usage)
     1. [Class instantiation](#class-instantiation)
+1. [Example](#example)
 1. [From yup-decorators](#from-yup-decorators)
 
 ## Preface
@@ -136,6 +138,8 @@ result; // {email: 'test@gmail.com', age: 27 }
 ```
 
 The sync version is `isValidSync`
+
+---
 
 ### Class instantiation
 

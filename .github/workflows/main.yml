@@ -27,7 +27,7 @@ jobs:
 
       - name: Test
         run: |
-          npm run test -- --ci --coverage --maxWorkers=2 --coverageThreshold='{"global": {"functions": 100, "lines": 90, "statements": 90}}'
+          npm run test -- --ci --coverage --maxWorkers=2 --coverageThreshold='{"global": {"functions": 100, "lines": 95, "statements": 95}}'
 
       - name: Build
         run: npm run build
