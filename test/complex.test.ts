@@ -1,15 +1,27 @@
+import { Person } from './models/person';
 import { validate } from '../src/index';
 import { Employee } from './models/employee';
 import { Address, House } from './models/house';
 import { Job } from './models/job';
 
-describe('validate complex object', function() {
-  describe('test validate', function() {
+describe('validate complex object', function () {
+  describe('test validate', function () {
     it('should allow valid objects', async () => {
       const object = getValidEmployee();
       const actual = await validate({ object, schemaName: Employee });
-      expect(actual).toBe(object);
+      expect(actual).toEqual(object);
     });
+
+    it('should validate nested record', async () => {
+      const object = getValidEmployee({
+        contacts: {
+          '1': getValidEmployee(),
+          '2': getValidEmployee(),
+        }
+      })
+      const actual = await validate({ object, schemaName: Employee });
+      expect(actual).toEqual(object);
+    })
 
     it('should reject invalid objects', async () => {
       const object = getInvalidEmployee();
@@ -20,6 +32,41 @@ describe('validate complex object', function() {
         errors: ['Employee ID is required'],
       });
     });
+
+    it('should reject invalid nestedRecord', async () => {
+      const object = getValidEmployee({
+        contacts: {
+          '1': getValidEmployee(),
+          '2': new Person({ age: 120, house: undefined, email: 'test' }),
+        }
+      })
+      await expect(
+        validate({
+          object,
+          schemaName: Employee,
+          options: { strict: true, abortEarly: false }
+        })
+      ).rejects.toMatchObject({
+        name: 'ValidationError',
+        errors: ['Not a valid email', 'contacts.2.age must be less than 100'],
+      });
+    })
+
+    it('should reject invalid nestedRecord', async () => {
+      const object = getValidEmployee({
+        contacts: true as any
+      })
+      await expect(
+        validate({
+          object,
+          schemaName: Employee,
+          options: { strict: true, abortEarly: false }
+        })
+      ).rejects.toMatchObject({
+        name: 'ValidationError',
+        errors: ['contacts must be a `object` type, but the final value was: `true`.'],
+      });
+    })
 
     it('should accept validate options', async () => {
       let object = getInvalidEmployee();
@@ -161,12 +208,14 @@ function getValidEmployee({
   age,
   address,
   houseType,
+  contacts = {},
 }: {
   email?: any;
   array?: any;
   age?: any;
   address?: string;
   houseType?: string;
+  contacts?: Record<string, Person>
 } = {}) {
   return new Employee({
     employeeId: '123',
@@ -189,6 +238,7 @@ function getValidEmployee({
       type: houseType ?? 'VILLA',
       address: new Address({ location: address ?? 'Italy' }),
     }),
+    contacts,
   });
 }
 
@@ -199,6 +249,7 @@ function getInvalidEmployee({
   includesHouse = true,
   includesJob = true,
   includesOffice = true,
+  includeContacts = true,
 }: {
   email?: any;
   age?: any;
@@ -206,21 +257,23 @@ function getInvalidEmployee({
   includesHouse?: boolean;
   includesJob?: boolean;
   includesOffice?: boolean;
+  includeContacts?: boolean;
 } = {}) {
   return new Employee({
     age: ifNullOrUndefined(age, -1),
     email: email ?? 'test',
     job: includesJob
       ? new Job({
-          jobTitle: includesOffice ? 'dev' : undefined,
-          office: includesOffice ? [{} as any] : undefined,
-        } as any)
+        jobTitle: includesOffice ? 'dev' : undefined,
+        office: includesOffice ? [{} as any] : undefined,
+      } as any)
       : undefined,
     house: includesHouse
       ? new House({
-          type: houseType ?? 'HOUSE',
-        } as any)
+        type: houseType ?? 'HOUSE',
+      } as any)
       : undefined,
+    contacts: includeContacts ? {} : undefined,
   } as any);
 }
 

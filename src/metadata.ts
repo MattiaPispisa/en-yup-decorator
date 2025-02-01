@@ -58,7 +58,7 @@ export class MetadataStorage {
       PropertySchema
     ]> = inheritanceMaps.flatMap(map => Array.from(map.entries()));
 
-    const schemaMap = new Map<PropertyName, Schema<any>>(iterator);
+    const schemaMap = new Map(iterator);
 
     this._metadataCache.set(target, schemaMap);
     return schemaMap;

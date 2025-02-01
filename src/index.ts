@@ -227,6 +227,40 @@ function nestedArray(
 }
 
 /**
+ * Register an object for the given property where each value have the same type: `typeFunction`. 
+ * 
+ * @param {() => Function} typeFunction a function that returns type of the element
+ * @param recordSchema callback to rich the record schema
+ * @param elementSchema callback to rich the element schema
+ * @returns {PropertyDecorator}
+ * 
+ * @example
+ * ```typescript
+ *    \@nestedRecord(() => Person,(s) => s.required('Contacts are required'))
+ *    contacts: Record<string, Person>;
+ * ```
+ */
+function nestedObject(
+  typeFunction: () => Function,
+  objectSchema?: (schema: Schema<any>) => Schema<any>,
+  elementSchema?: (schema: IEnYupSchema) => IEnYupSchema
+): PropertyDecorator {
+  return (target, property) => {
+    const nestedType = typeFunction();
+    const nestedElementSchema = _getObjectSchema(nestedType, {
+      compose: elementSchema,
+    });
+    const schema = _recordSchema(nestedElementSchema, objectSchema)
+
+    metadataStorage.addSchemaMetadata({
+      target: target instanceof Function ? target : target.constructor,
+      property,
+      schema,
+    });
+  };
+}
+
+/**
  * Register an object schema to the given property. Use this when the property type is unknown
  *
  * @param {() => Function} typeFunction  a function that returns type of the element
@@ -266,7 +300,7 @@ function nestedType(
  *
  * @example
  * ```typescript
- *    \@nested(an.object().required('Job is required'))
+ *    \@nested((schema) => schema.required('Job is required'))
  *    job: Job;
  * ```
  */
@@ -653,6 +687,33 @@ function _defineSchema(
   return composed;
 }
 
+/**
+ * Compose a lazy schema where value must be an object 
+ * and each entry must be [key: string]: valueSchema
+ *
+ * @param {Schema} valueSchema
+ * @param {Function} objectSchema
+ * @returns {LazySchema}
+ */
+function _recordSchema(
+  valueSchema: Schema<any>,
+  objectSchema: (schema: Schema<any>) => Schema<any> = (id) => id
+): yup.LazySchema<any> {
+  return yup.lazy((object) => {
+    if (object && typeof object === 'object' && !Array.isArray(object)) {
+      // dynamic shape for each key in the object
+      const shape = Object.keys(object).reduce<Record<string, Schema<any>>>((acc, key) => {
+        acc[key] = valueSchema;
+        return acc;
+      }, {});
+
+      return objectSchema(yup.object().shape(shape));
+    }
+
+    return objectSchema(yup.object());
+  });
+}
+
 const a = yup;
 const an = yup;
 
@@ -662,7 +723,10 @@ export {
   getNamedSchema,
   getSchemaByType,
   namedSchema,
+  nestedObject,
   nestedType,
+  nested,
+  nestedArray,
   schema,
   a,
   an,
@@ -671,8 +735,6 @@ export {
   validateSync,
   validateSyncAt,
   validateAt,
-  nested,
-  nestedArray,
   is,
   IValidateArguments,
   IValidatePathArguments,
