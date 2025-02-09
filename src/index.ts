@@ -183,7 +183,7 @@ function schema(options?: SchemaOptions): ClassDecorator {
  *   array: number[];
  * ```
  */
-function is(schema: Schema<any>): PropertyDecorator {
+function is(schema: Schema<any> | yup.LazySchema<any>): PropertyDecorator {
   return (target, property) => {
     metadataStorage.addSchemaMetadata({
       target: target instanceof Function ? target : target.constructor,
