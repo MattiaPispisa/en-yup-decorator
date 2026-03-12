@@ -6,7 +6,7 @@ export class Address {
     this.location = args.location;
   }
 
-  @is(a.string().required("House address is required"))
+  @is(a.lazy((_) => a.string().required("House address is required")))
   location: string;
 }
 

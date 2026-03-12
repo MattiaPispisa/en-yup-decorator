@@ -1,4 +1,4 @@
-import { a, is, namedSchema, nested, nestedObject } from "../../src/index";
+import { a, is, namedSchema, nestedType, nestedObject } from "../../src/index";
 import { Job } from "./job";
 import { Person } from "./person";
 import { House } from "./house";
@@ -19,7 +19,7 @@ export class Employee extends Person {
     this.contacts = args.contacts;
   }
 
-  @nested((schema) => schema.required("Job is required"))
+  @nestedType(() => Job, (schema) => schema.required("Job is required"))
   job: Job;
 
   @is(a.string().required("Employee ID is required"))

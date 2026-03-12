@@ -11,8 +11,6 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "resolveJsonModule": true,

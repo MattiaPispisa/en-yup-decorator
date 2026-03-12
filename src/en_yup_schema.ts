@@ -1,8 +1,19 @@
 import * as yup from "yup";
 
-type IEnYupSchema = Pick<yup.ObjectSchema<yup.AnyObject>, "pick" | "omit"> & yup.Schema;
+/**
+ * Extended {@link yup.Schema} interface with common {@link yup.ObjectSchema} methods.
+ *
+ * Includes pick, omit, partial, deepPartial, from, stripUnknown.
+ */
+type IEnYupSchema = Pick<
+  yup.ObjectSchema<yup.AnyObject>,
+  "pick" | "omit" | "partial" | "deepPartial" | "from" | "stripUnknown"
+> &
+  yup.Schema;
 
-/// a method that creates a {@link IEnYupSchema} instance
+/**
+ * a method that creates a {@link IEnYupSchema} instance
+ */
 function createEnYupSchema({
   target,
   useTargetClass,
@@ -11,7 +22,7 @@ function createEnYupSchema({
   if (useTargetClass) {
     return new EnYupSchema({ shape, target, useTargetClass });
   }
-  return yup.object(shape);
+  return yup.object(shape) as unknown as IEnYupSchema;
 }
 
 type EnYupSchemaConstructorArguments = {
@@ -61,6 +72,22 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
     ""
   > {
     return this.schema.omit(keys);
+  }
+
+  partial(): yup.ObjectSchema<yup.AnyObject> {
+    return this.schema.partial();
+  }
+
+  deepPartial(): yup.ObjectSchema<yup.AnyObject> {
+    return this.schema.deepPartial();
+  }
+
+  from(from: string, to: string, alias?: boolean): yup.ObjectSchema<yup.AnyObject> {
+    return this.schema.from(from, to, alias);
+  }
+
+  stripUnknown(): yup.ObjectSchema<yup.AnyObject> {
+    return this.schema.stripUnknown();
   }
 }
 

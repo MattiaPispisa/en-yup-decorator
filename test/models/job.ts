@@ -1,5 +1,6 @@
-import { is, a, an, namedSchema, nestedArray } from "../../src/index";
+import { is, a, an, namedSchema, nestedArray, schema } from "../../src/index";
 
+@schema()
 export class Office {
   constructor(args: { name: string; location: string }) {
     this.name = args.name;

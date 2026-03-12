@@ -4,15 +4,17 @@ Added TypeScript decorators support for [yup](https://github.com/jquense/yup)
 
 ## Table of Contents
 
-1. [Preface](#preface)
-1. [Usage](#usage)
-   1. [Class instantiation](#class-instantiation)
-1. [Example](#example)
-1. [From yup-decorators](#from-yup-decorators)
+- [En Yup Decorators](#en-yup-decorators)
+  - [Table of Contents](#table-of-contents)
+  - [Preface](#preface)
+  - [Usage](#usage)
+    - [Class instantiation](#class-instantiation)
+  - [Example](#example)
+  - [Migrations](#migrations)
 
 ## Preface
 
-This library is a continuation of `yup-decorators`, enhanced with support for the latest versions of `yup` and `TypeScript`. I would like to thank the original creators of yup-decorators for their excellent work in providing a powerful and flexible way to work with yup schemas. This version aims to bring the same functionality while keeping up with updates to yup and modern TypeScript features, offering an improved and more seamless experience ([diff](#from-yup-decorators)).
+This library is a continuation of `yup-decorators`, enhanced with support for the latest versions of `yup` and `TypeScript`. I would like to thank the original creators of yup-decorators for their excellent work in providing a powerful and flexible way to work with yup schemas. This version aims to bring the same functionality while keeping up with updates to yup and modern TypeScript features, offering an improved and more seamless experience. See [Migration from yup-decorators](documentation/migrations/from-yup-decorators.md) for migration details.
 
 ## Usage
 
@@ -55,7 +57,7 @@ const userSchema = getSchemaByType(User);
 - Nested validation
 
 ```typescript
-import { is, a, an, nested, schema } from "yup-decorator";
+import { is, a, an, nestedType, schema } from "en-yup-decorator";
 
 @schema()
 export class NestedChildModel {
@@ -68,7 +70,7 @@ export class NestedModel {
   @is(an.array().of(a.number()).min(2).max(3))
   array: number[];
 
-  @nested()
+  @nestedType(() => NestedChildModel)
   child: NestedChildModel;
 }
 ```
@@ -185,25 +187,24 @@ class Person {
     ...
   }
 
-  @is(a.string().required('Name is required')) // `is` let you register a schema to the given property
+  @is(a.string().required('Name is required')) // `is` lets you register a schema to the given property
   name: string
 
-  @nestedObject(() => Person) // `nestedRecord` let you register an object where each value is of the given property
-  contacts: Record<string,Person>
+  @nestedObject(() => Person) // `nestedObject` lets you register an object where each value is of the given type
+  contacts: Record<string, Person>
 
-  @nestedArray(() => House) // `nestedArray` let you register an array of the given type
+  @nestedArray(() => House) // `nestedArray` lets you register an array of the given type
   houses: House[]
 
-  @nested() // `nested` infer the type if known
+  @nestedType(() => Job, (s) => s.required()) // `nestedType` lets you register an object schema, with optional composition
   job: Job
 
-  nestedType(() => Country) // `nestedType` let you register an object schema to the given property
+  @nestedType(() => Country) // `nestedType` lets you register an object schema to the given property
   country: Country
 }
 ```
 
-## From yup-decorators
+## Migrations
 
-The main differences from `yup-decorators` are that schemas (@schema, @namedSchema) creates instances of `EnYupSchema`, so it is no longer possible to annotate a class as an object directly (~~@namedSchema(a.object().required)~~). Instead, there is a callback to enrich the generated schema (@namedSchema((s) => s.required())). This change is due to the ability to convert objects into instances of the target class during validation (`useTargetClass`). Tests and an example are provided to demonstrate this functionality.
-
-The dependencies have been updated, and a version of `yup` >= 1.0.0 is now required.
+- [Migration from v1 to v2](documentation/migrations/from-v1-to-v2.md) — Migrate from legacy decorators (reflect-metadata) to TC39 Stage 3 decorators.
+- [Migration from yup-decorators](documentation/migrations/from-yup-decorators.md) — Migrate from the original yup-decorators library.

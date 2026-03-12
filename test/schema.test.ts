@@ -64,6 +64,40 @@ describe("EnYupSchema method ", () => {
       a.object({ birthday: a.date().required() }).describe(),
     );
   });
+
+  it("should partial", async () => {
+    const partialSchema = getSchemaByType(User).partial();
+    const result = await partialSchema.validate({});
+    expect(result).toEqual({});
+  });
+
+  it("should deepPartial", async () => {
+    const deepPartialSchema = getSchemaByType(User).deepPartial();
+    const result = await deepPartialSchema.validate({ name: "Mattia" });
+    expect(result).toEqual({ name: "Mattia" });
+  });
+
+  it("should from", async () => {
+    const schema = getSchemaByType(User)
+      .omit(["name"])
+      .shape({ fullName: a.string().required() })
+      .from("name", "fullName");
+    const result = await schema.validate({ name: "Mattia", birthday: birthday.toString() });
+    expect(result).toHaveProperty("fullName", "Mattia");
+  });
+
+  it("should noUnknown", async () => {
+    const schema = getSchemaByType(User).pick(["name"]).noUnknown(true);
+    const result = await schema.validate({ name: "Mattia", unknownKey: "value" });
+    expect(result).toEqual({ name: "Mattia" });
+    expect(result).not.toHaveProperty("unknownKey");
+  });
+
+  it("should stripUnknown", async () => {
+    const schema = getSchemaByType(User).pick(["name"]).stripUnknown();
+    const result = await schema.validate({ name: "Mattia", unknownKey: "value" });
+    expect(result).toEqual({ name: "Mattia" });
+  });
 });
 
 const birthday = new Date(1997, 11, 12);

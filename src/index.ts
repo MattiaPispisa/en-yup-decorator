@@ -1,11 +1,36 @@
-import { ArraySchema, AnySchema, ValidateOptions, Lazy, array as yupArray, lazy as yupLazy, object as yupObject } from "yup";
-import * as yup from "yup"
-import "reflect-metadata";
+import {
+  ArraySchema,
+  AnySchema,
+  ValidateOptions,
+  Lazy,
+  array as yupArray,
+  lazy as yupLazy,
+  object as yupObject,
+} from "yup";
+import * as yup from "yup";
 
 import { MetadataStorage } from "./metadata";
 import { createEnYupSchema, IEnYupSchema } from "./en_yup_schema";
 
 const metadataStorage = new MetadataStorage();
+
+/**
+ * Pending field metadata collected by field decorators.
+ * Flushed to metadataStorage when the class decorator runs.
+ *
+ * TC39 field decorators do not receive the class, so we use this bridge.
+ */
+const _pendingFieldMetadata: Array<{
+  property: string | symbol;
+  schema: AnySchema | Lazy<any, any, any>;
+}> = [];
+
+function _flushPendingFieldMetadata(target: Function): void {
+  for (const { property, schema } of _pendingFieldMetadata) {
+    metadataStorage.addSchemaMetadata({ target, property, schema });
+  }
+  _pendingFieldMetadata.length = 0;
+}
 
 // named schema
 const _schemas: { [key: string]: IEnYupSchema } = {};
@@ -53,7 +78,10 @@ function getNamedSchema(name: string): IEnYupSchema {
  * ```
  */
 function getSchemaByType(target: Object): IEnYupSchema {
-  const constructor = target instanceof Function ? target : target.constructor;
+  const constructor = (target instanceof Function ? target : target?.constructor) as Function;
+  if (!constructor) {
+    throw new Error("Cannot get schema: target or target.constructor is undefined");
+  }
   return _allSchemas.get(constructor)!;
 }
 
@@ -115,6 +143,7 @@ type SchemaOptions = {
  *
  * @param {string} name the schema name
  * @param {SchemaOptions} options schema options
+ * @returns {(target: Class, context?: ClassDecoratorContext<Class>) => void} TC39 class decorator function
  *
  * @example
  *
@@ -129,8 +158,12 @@ type SchemaOptions = {
  * const userSchema = getNamedSchema('user');
  * ```
  */
-function namedSchema(name: string, options?: SchemaOptions): ClassDecorator {
-  return (target) => {
+function namedSchema(name: string, options?: SchemaOptions): <Class extends abstract new (...args: any) => any>(target: Class, context?: ClassDecoratorContext<Class>) => void {
+  return <Class extends abstract new (...args: any) => any>(
+    target: Class,
+    _context?: ClassDecoratorContext<Class>,
+  ): void => {
+    _flushPendingFieldMetadata(target);
     _schemas[name] = _defineSchema(target, {
       useTargetClass: options?.useTargetClass,
     });
@@ -141,7 +174,7 @@ function namedSchema(name: string, options?: SchemaOptions): ClassDecorator {
  * Register a schema
  *
  * @param {SchemaOptions} options schema options
- * @return {ClassDecorator} The class decorator
+ * @returns {(target: Class, context?: ClassDecoratorContext<Class>) => void} TC39 class decorator function
  *
  * @example
  * ```typescript
@@ -154,8 +187,12 @@ function namedSchema(name: string, options?: SchemaOptions): ClassDecorator {
  * const userSchema = getSchemaByType(User);
  * ```
  */
-function schema(options?: SchemaOptions): ClassDecorator {
-  return (target) => {
+function schema(options?: SchemaOptions): <Class extends abstract new (...args: any) => any>(target: Class, context?: ClassDecoratorContext<Class>) => void {
+  return <Class extends abstract new (...args: any) => any>(
+    target: Class,
+    _context?: ClassDecoratorContext<Class>,
+  ): void => {
+    _flushPendingFieldMetadata(target);
     _defineSchema(target, {
       useTargetClass: options?.useTargetClass,
     });
@@ -165,8 +202,8 @@ function schema(options?: SchemaOptions): ClassDecorator {
 /**
  * Register a schema to the given property
  *
- * @param {Schema} schema the schema to register
- * @return {PropertyDecorator} The property decorator
+ * @param {AnySchema | Lazy} schema the yup schema to register
+ * @returns {(_value: undefined, context: ClassFieldDecoratorContext) => void} TC39 class field decorator function
  *
  * @example
  * ```typescript
@@ -183,13 +220,12 @@ function schema(options?: SchemaOptions): ClassDecorator {
  *   array: number[];
  * ```
  */
-function is(schema: AnySchema | Lazy<any, any, any>): PropertyDecorator {
-  return (target, property) => {
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
-      schema,
-    });
+function is(schema: AnySchema | Lazy<any, any, any>): (_value: undefined, context: ClassFieldDecoratorContext) => void {
+  return <This, Value>(
+    _value: undefined,
+    context: ClassFieldDecoratorContext<This, Value>,
+  ): void => {
+    _pendingFieldMetadata.push({ property: context.name, schema });
   };
 }
 
@@ -198,8 +234,8 @@ function is(schema: AnySchema | Lazy<any, any, any>): PropertyDecorator {
  *
  * @param {() => Function} typeFunction a function that returns type of the element
  * @param {ArraySchema} arraySchema the array schema
- * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to rich the element schema
- * @returns {PropertyDecorator}
+ * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to compose the element schema
+ * @returns {(_value: undefined, context: ClassFieldDecoratorContext) => void} TC39 class field decorator function
  *
  * @example
  * ```typescript
@@ -211,32 +247,34 @@ function nestedArray(
   typeFunction: () => Function,
   arraySchema: ArraySchema<any, any> = yupArray(),
   elementSchema?: (schema: IEnYupSchema) => IEnYupSchema,
-): PropertyDecorator {
-  return (target, property) => {
+): (_value: undefined, context: ClassFieldDecoratorContext) => void {
+  return <This, Value>(
+    _value: undefined,
+    context: ClassFieldDecoratorContext<This, Value>,
+  ): void => {
     const nestedType = typeFunction();
     const nestedElementSchema = _getObjectSchema(nestedType, {
       compose: elementSchema,
     });
 
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
+    _pendingFieldMetadata.push({
+      property: context.name,
       schema: arraySchema.of(nestedElementSchema),
     });
   };
 }
 
 /**
- * Register an object for the given property where each value have the same type: `typeFunction`.
+ * Register an object for the given property where each value has the same type: `typeFunction`.
  *
  * @param {() => Function} typeFunction a function that returns type of the element
- * @param recordSchema callback to rich the record schema
- * @param elementSchema callback to rich the element schema
- * @returns {PropertyDecorator}
+ * @param {(schema: AnySchema) => AnySchema} objectSchema callback to compose the record schema
+ * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to compose the element schema
+ * @returns {(_value: undefined, context: ClassFieldDecoratorContext) => void} TC39 class field decorator function
  *
  * @example
  * ```typescript
- *    \@nestedRecord(() => Person,(s) => s.required('Contacts are required'))
+ *    \@nestedObject(() => Person, (s) => s.required('Contacts are required'))
  *    contacts: Record<string, Person>;
  * ```
  */
@@ -244,28 +282,30 @@ function nestedObject(
   typeFunction: () => Function,
   objectSchema?: (schema: AnySchema) => AnySchema,
   elementSchema?: (schema: IEnYupSchema) => IEnYupSchema,
-): PropertyDecorator {
-  return (target, property) => {
+): (_value: undefined, context: ClassFieldDecoratorContext) => void {
+  return <This, Value>(
+    _value: undefined,
+    context: ClassFieldDecoratorContext<This, Value>,
+  ): void => {
     const nestedType = typeFunction();
     const nestedElementSchema = _getObjectSchema(nestedType, {
       compose: elementSchema,
     });
-    const schema = _recordSchema(nestedElementSchema, objectSchema);
+    const recordSchema = _recordSchema(nestedElementSchema, objectSchema);
 
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
-      schema,
+    _pendingFieldMetadata.push({
+      property: context.name,
+      schema: recordSchema,
     });
   };
 }
 
 /**
- * Register an object schema to the given property. Use this when the property type is unknown
+ * Register an object schema to the given property. Use this when the property type is unknown.
  *
- * @param {() => Function} typeFunction  a function that returns type of the element
- * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to rich the element schema
- * @returns {PropertyDecorator}
+ * @param {() => Function} typeFunction a function that returns type of the element
+ * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to compose the element schema
+ * @returns {(_value: undefined, context: ClassFieldDecoratorContext) => void} TC39 class field decorator function
  *
  * @example
  * ```typescript
@@ -276,43 +316,18 @@ function nestedObject(
 function nestedType(
   typeFunction: () => Function,
   elementSchema?: (schema: IEnYupSchema) => IEnYupSchema,
-): PropertyDecorator {
-  return (target, property) => {
+): (_value: undefined, context: ClassFieldDecoratorContext) => void {
+  return <This, Value>(
+    _value: undefined,
+    context: ClassFieldDecoratorContext<This, Value>,
+  ): void => {
     const nestedType = typeFunction();
     const nestedSchema = _getObjectSchema(nestedType, {
       compose: elementSchema,
     });
 
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
-      schema: nestedSchema,
-    });
-  };
-}
-
-/**
- * Register an object schema to the given property.
- * Use this when the property type is known and can be extracted using reflect-metadata
- *
- * @param {(schema: IEnYupSchema) => IEnYupSchema} schema callback to rich the element schema
- * @return {PropertyDecorator}
- *
- * @example
- * ```typescript
- *    \@nested((schema) => schema.required('Job is required'))
- *    job: Job;
- * ```
- */
-function nested(schema?: (schema: IEnYupSchema) => IEnYupSchema): PropertyDecorator {
-  return (target, property) => {
-    const nestedType = (Reflect as any).getMetadata("design:type", target, property);
-
-    const nestedSchema = _getObjectSchema(nestedType, { compose: schema });
-
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
+    _pendingFieldMetadata.push({
+      property: context.name,
       schema: nestedSchema,
     });
   };
@@ -689,7 +704,6 @@ export {
   namedSchema,
   nestedObject,
   nestedType,
-  nested,
   nestedArray,
   schema,
   a,

@@ -59,9 +59,7 @@
     "typecheck": "tsdx typecheck",
     "prepublishOnly": "bun run build"
   },
-  "dependencies": {
-    "reflect-metadata": "^0.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.1.6",
     "husky": "^9.1.7",
