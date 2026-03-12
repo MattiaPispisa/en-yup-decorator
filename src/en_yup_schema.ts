@@ -16,7 +16,7 @@ function createEnYupSchema({
 
 type EnYupSchemaConstructorArguments = {
   target: Function;
-  shape: Record<string, yup.Schema>;
+  shape: Record<string, yup.AnySchema>;
   useTargetClass?: boolean;
 };
 

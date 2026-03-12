@@ -1,6 +1,6 @@
-import { ArraySchema, Schema, ValidateOptions } from "yup";
+import { ArraySchema, AnySchema, ValidateOptions, Lazy, array as yupArray, lazy as yupLazy, object as yupObject } from "yup";
+import * as yup from "yup"
 import "reflect-metadata";
-import * as yup from "yup";
 
 import { MetadataStorage } from "./metadata";
 import { createEnYupSchema, IEnYupSchema } from "./en_yup_schema";
@@ -183,7 +183,7 @@ function schema(options?: SchemaOptions): ClassDecorator {
  *   array: number[];
  * ```
  */
-function is(schema: Schema<any> | yup.LazySchema<any>): PropertyDecorator {
+function is(schema: AnySchema | Lazy<any, any, any>): PropertyDecorator {
   return (target, property) => {
     metadataStorage.addSchemaMetadata({
       target: target instanceof Function ? target : target.constructor,
@@ -209,7 +209,7 @@ function is(schema: Schema<any> | yup.LazySchema<any>): PropertyDecorator {
  */
 function nestedArray(
   typeFunction: () => Function,
-  arraySchema: ArraySchema<any, any> = yup.array(),
+  arraySchema: ArraySchema<any, any> = yupArray(),
   elementSchema?: (schema: IEnYupSchema) => IEnYupSchema,
 ): PropertyDecorator {
   return (target, property) => {
@@ -242,7 +242,7 @@ function nestedArray(
  */
 function nestedObject(
   typeFunction: () => Function,
-  objectSchema?: (schema: Schema<any>) => Schema<any>,
+  objectSchema?: (schema: AnySchema) => AnySchema,
   elementSchema?: (schema: IEnYupSchema) => IEnYupSchema,
 ): PropertyDecorator {
   return (target, property) => {
@@ -577,7 +577,7 @@ function _getSchema({
 }: {
   object: object;
   schemaName?: string | Function;
-}): Schema<any> {
+}): AnySchema {
   if (object === null || typeof object !== "object") {
     throw new Error("Cannot validate non object types");
   }
@@ -600,7 +600,7 @@ type _GetSchemaOptions = {
  * @param {_GetSchemaOptions} options
  * @returns {ObjectSchema}
  */
-function _getObjectSchema(type: Function, options: _GetSchemaOptions): Schema<any> {
+function _getObjectSchema(type: Function, options: _GetSchemaOptions): AnySchema {
   const { compose } = options;
   const schemaByType = getSchemaByType(type);
 
@@ -631,7 +631,7 @@ function _defineSchema(target: Function, options: _DefineSchemaOptions): IEnYupS
   const schemaMap = metadataStorage.findSchemaMetadata(target);
 
   // compose shape
-  const objectShape: Record<string, Schema<any>> = Array.from(schemaMap?.entries() ?? []).reduce(
+  const objectShape: Record<string, AnySchema> = Array.from(schemaMap?.entries() ?? []).reduce(
     (currentShape, [property, schema]) => {
       return { ...currentShape, [property]: schema };
     },
@@ -654,26 +654,26 @@ function _defineSchema(target: Function, options: _DefineSchemaOptions): IEnYupS
  * Compose a lazy schema where value must be an object
  * and each entry must be [key: string]: valueSchema
  *
- * @param {Schema} valueSchema
+ * @param {AnySchema} valueSchema
  * @param {Function} objectSchema
  * @returns {LazySchema}
  */
 function _recordSchema(
-  valueSchema: Schema<any>,
-  objectSchema: (schema: Schema<any>) => Schema<any> = (id) => id,
-): yup.LazySchema<any> {
-  return yup.lazy((object) => {
+  valueSchema: AnySchema,
+  objectSchema: (schema: AnySchema) => AnySchema = (id) => id,
+): Lazy<any, any, any> {
+  return yupLazy((object) => {
     if (object && typeof object === "object" && !Array.isArray(object)) {
       // dynamic shape for each key in the object
-      const shape = Object.keys(object).reduce<Record<string, Schema<any>>>((acc, key) => {
+      const shape = Object.keys(object).reduce<Record<string, AnySchema>>((acc, key) => {
         acc[key] = valueSchema;
         return acc;
       }, {});
 
-      return objectSchema(yup.object().shape(shape));
+      return objectSchema(yupObject().shape(shape));
     }
 
-    return objectSchema(yup.object());
+    return objectSchema(yupObject());
   });
 }
 
