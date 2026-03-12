@@ -80,11 +80,11 @@
   },
   "size-limit": [
     {
-      "path": "dist/en-yup-decorator.cjs.production.min.js",
+      "path": "dist/index.js",
       "limit": "10 KB"
     },
     {
-      "path": "dist/en-yup-decorator.esm.js",
+      "path": "dist/index.cjs",
       "limit": "10 KB"
     }
   ],
