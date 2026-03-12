@@ -10,6 +10,7 @@ Added TypeScript decorators support for [yup](https://github.com/jquense/yup)
   - [Usage](#usage)
     - [Class instantiation](#class-instantiation)
   - [Example](#example)
+  - [Development](#development)
   - [Migrations](#migrations)
 
 ## Preface
@@ -203,6 +204,10 @@ class Person {
   country: Country
 }
 ```
+
+## Development
+
+Tests use Vitest. Because this library relies on **TC39 Stage 3 decorators**, the test runner requires `vite-plugin-swc-transform` to transpile them. esbuild (Vitest's default transformer) does not support decorators. The `vitest.config.ts` configures SWC with `decoratorVersion: "2022-03"` for this purpose.
 
 ## Migrations
 
