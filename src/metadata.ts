@@ -6,7 +6,7 @@ import {
   PropertyName,
 } from './types';
 
-export class MetadataStorage {
+class MetadataStorage {
   private _metadataMap = new Map<TargetClass, TargetPropertiesSchemas>();
   private _metadataCache = new Map<TargetClass, TargetPropertiesSchemas>();
 
@@ -64,3 +64,5 @@ export class MetadataStorage {
     return schemaMap;
   }
 }
+
+export { MetadataStorage }

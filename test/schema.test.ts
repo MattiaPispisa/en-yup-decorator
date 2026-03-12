@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import { Friend, User } from './models/user';
 import { a, getSchemaByType, validate } from '../src/index';
 

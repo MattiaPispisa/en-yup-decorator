@@ -717,6 +717,11 @@ function _recordSchema(
 const a = yup;
 const an = yup;
 
+export type {
+  IValidateArguments,
+  IValidatePathArguments,
+  IEnYupSchema,
+}
 export {
   cast,
   isValidSync,
@@ -736,7 +741,4 @@ export {
   validateSyncAt,
   validateAt,
   is,
-  IValidateArguments,
-  IValidatePathArguments,
-  IEnYupSchema,
 };

@@ -18,16 +18,13 @@ class User {
     this.birthday = args.birthday;
   }
 
-  @is(a.string().required())
+  @is(a.string().required().default(false))
   name: string;
 
   @is(a.date().required())
   birthday: Date;
 
-  @nestedType(
-    () => Job,
-    s => s.required()
-  )
+  @nestedType(() => Job, (s) => s.required())
   job: Job;
 }
 

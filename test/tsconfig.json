@@ -1,11 +1,11 @@
 {
+  // just for test checks
   "compilerOptions": {
-    "lib": ["es2015"],
-    "target": "es6",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "declaration": true,
-    "baseUrl": "."
   },
   "exclude": ["./node_modules"]
 }

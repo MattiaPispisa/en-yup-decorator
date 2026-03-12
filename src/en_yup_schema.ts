@@ -70,4 +70,5 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
   }
 }
 
-export { IEnYupSchema, createEnYupSchema };
+export type { IEnYupSchema }
+export { createEnYupSchema };
