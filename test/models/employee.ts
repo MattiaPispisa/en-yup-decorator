@@ -1,9 +1,9 @@
-import { a, is, namedSchema, nested, nestedObject } from '../../src/index';
-import { Job } from './job';
-import { Person } from './person';
-import { House } from './house';
+import { a, is, namedSchema, nested, nestedObject } from "../../src/index";
+import { Job } from "./job";
+import { Person } from "./person";
+import { House } from "./house";
 
-@namedSchema('employee')
+@namedSchema("employee")
 export class Employee extends Person {
   constructor(args: {
     job: Job;
@@ -11,7 +11,7 @@ export class Employee extends Person {
     email: string;
     age: number;
     house: House;
-    contacts: Record<string, Person>
+    contacts: Record<string, Person>;
   }) {
     super(args);
     this.job = args.job;
@@ -19,12 +19,12 @@ export class Employee extends Person {
     this.contacts = args.contacts;
   }
 
-  @nested(schema => schema.required('Job is required'))
+  @nested((schema) => schema.required("Job is required"))
   job: Job;
 
-  @is(a.string().required('Employee ID is required'))
+  @is(a.string().required("Employee ID is required"))
   employeeId: string;
 
-  @nestedObject(() => Person,(s) => s.required('Contacts are required'))
-  contacts: Record<string, Person>
+  @nestedObject(() => Person, (s) => s.required("Contacts are required"))
+  contacts: Record<string, Person>;
 }

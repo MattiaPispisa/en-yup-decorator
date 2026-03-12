@@ -27,9 +27,7 @@ describe("validate complex object", function () {
 
     it("should reject invalid objects", async () => {
       const object = getInvalidEmployee();
-      await expect(
-        validate({ object, schemaName: Employee }),
-      ).rejects.toMatchObject({
+      await expect(validate({ object, schemaName: Employee })).rejects.toMatchObject({
         name: "ValidationError",
         errors: ["Employee ID is required"],
       });
@@ -66,9 +64,7 @@ describe("validate complex object", function () {
         }),
       ).rejects.toMatchObject({
         name: "ValidationError",
-        errors: [
-          "contacts must be a `object` type, but the final value was: `true`.",
-        ],
+        errors: ["contacts must be a `object` type, but the final value was: `true`."],
       });
     });
 

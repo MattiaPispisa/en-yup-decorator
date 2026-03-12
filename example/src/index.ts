@@ -1,4 +1,4 @@
-import { a, is, nestedType, schema, validate } from 'en-yup-decorator';
+import { a, is, nestedType, schema, validate } from "en-yup-decorator";
 
 @schema({ useTargetClass: true })
 class Job {
@@ -32,21 +32,21 @@ async function main() {
   try {
     const user: User = await validate({
       object: {
-        job: { name: 'Dev' },
-        name: 'Mattia',
+        job: { name: "Dev" },
+        name: "Mattia",
         birthday: new Date().toString(),
       },
       schemaName: User,
     });
     console.log(
-      'user',
+      "user",
       user,
       user instanceof User,
       user.birthday instanceof Date,
-      user.job instanceof Job
+      user.job instanceof Job,
     );
   } catch (err) {
-    console.error('Validation failed:', err);
+    console.error("Validation failed:", err);
   }
 }
 

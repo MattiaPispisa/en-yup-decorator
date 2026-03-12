@@ -2,7 +2,32 @@
   "name": "en-yup-decorator",
   "version": "1.2.0",
   "description": "A TypeScript library for creating yup schema decorators, simplifying schema validations.",
+  "keywords": [
+    "decorators",
+    "schema",
+    "typescript",
+    "validation",
+    "yup",
+    "yup-decorators"
+  ],
+  "homepage": "https://github.com/MattiaPispisa/en-yup-decorator#readme",
+  "bugs": {
+    "url": "https://github.com/MattiaPispisa/en-yup-decorator/issues"
+  },
   "license": "MIT",
+  "author": {
+    "name": "Mattia Pispisa",
+    "email": "mattia.pispisa@gmail.com",
+    "url": "https://mattiapispisa.it"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MattiaPispisa/en-yup-decorator"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "module": "./dist/index.js",
@@ -20,34 +45,6 @@
     },
     "./package.json": "./package.json"
   },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MattiaPispisa/en-yup-decorator"
-  },
-  "keywords": [
-    "typescript",
-    "yup",
-    "decorators",
-    "validation",
-    "schema",
-    "yup-decorators"
-  ],
-  "author": {
-    "name": "Mattia Pispisa",
-    "email": "mattia.pispisa@gmail.com",
-    "url": "https://mattiapispisa.it"
-  },
-  "homepage": "https://github.com/MattiaPispisa/en-yup-decorator#readme",
-  "bugs": {
-    "url": "https://github.com/MattiaPispisa/en-yup-decorator/issues"
-  },
-  "engines": {
-    "node": ">=14.0.0"
-  },
   "scripts": {
     "test:coverage": "tsdx test --coverage",
     "size": "size-limit",
@@ -61,6 +58,21 @@
     "format:check": "tsdx format --check",
     "typecheck": "tsdx typecheck",
     "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "reflect-metadata": "^0.1.0"
+  },
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^11.1.6",
+    "husky": "^9.1.7",
+    "size-limit": "^11.1.6",
+    "tsdx": "^2.0.0",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.0",
+    "yup": "^1.0.0"
+  },
+  "peerDependencies": {
+    "yup": "^1.0.0"
   },
   "husky": {
     "hooks": {
@@ -77,19 +89,7 @@
       "limit": "10 KB"
     }
   ],
-  "dependencies": {
-    "reflect-metadata": "^0.1.0"
-  },
-  "devDependencies": {
-    "@size-limit/preset-small-lib": "^11.1.6",
-    "husky": "^9.1.7",
-    "size-limit": "^11.1.6",
-    "tsdx": "^2.0.0",
-    "typescript": "^5.7.2",
-    "vitest": "^4.0.0",
-    "yup": "^1.0.0"
-  },
-  "peerDependencies": {
-    "yup": "^1.0.0"
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

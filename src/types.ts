@@ -1,4 +1,4 @@
-import { Lazy, Schema } from 'yup';
+import { Lazy, Schema } from "yup";
 
 type PropertyName = string | symbol;
 type PropertySchema = Schema<any> | Lazy<Schema<any>>;

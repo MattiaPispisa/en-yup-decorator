@@ -1,7 +1,6 @@
-import * as yup from 'yup';
+import * as yup from "yup";
 
-type IEnYupSchema = Pick<yup.ObjectSchema<yup.AnyObject>, 'pick' | 'omit'> &
-  yup.Schema;
+type IEnYupSchema = Pick<yup.ObjectSchema<yup.AnyObject>, "pick" | "omit"> & yup.Schema;
 
 /// a method that creates a {@link IEnYupSchema} instance
 function createEnYupSchema({
@@ -24,7 +23,7 @@ type EnYupSchemaConstructorArguments = {
 class EnYupSchema extends yup.Schema implements IEnYupSchema {
   constructor({ shape, target }: EnYupSchemaConstructorArguments) {
     super({
-      type: 'en_yup_schema',
+      type: "en_yup_schema",
       check: (input): input is typeof target => input instanceof target,
     });
     this.schema = yup.object(shape);
@@ -48,27 +47,22 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
   private schema: yup.ObjectSchema<yup.AnyObject>;
 
   pick<TKey extends string | number>(
-    keys: readonly TKey[]
-  ): yup.ObjectSchema<
-    { [K in TKey]: yup.AnyObject[K] },
-    yup.AnyObject,
-    any,
-    ''
-  > {
+    keys: readonly TKey[],
+  ): yup.ObjectSchema<{ [K in TKey]: yup.AnyObject[K] }, yup.AnyObject, any, ""> {
     return this.schema.pick(keys);
   }
 
   omit<TKey extends string | number>(
-    keys: readonly TKey[]
+    keys: readonly TKey[],
   ): yup.ObjectSchema<
     { [K in Exclude<string, TKey> | Exclude<number, TKey>]: yup.AnyObject[K] },
     yup.AnyObject,
     any,
-    ''
+    ""
   > {
     return this.schema.omit(keys);
   }
 }
 
-export type { IEnYupSchema }
+export type { IEnYupSchema };
 export { createEnYupSchema };

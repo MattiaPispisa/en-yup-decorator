@@ -3,9 +3,10 @@
 Added TypeScript decorators support for [yup](https://github.com/jquense/yup)
 
 ## Table of Contents
+
 1. [Preface](#preface)
 1. [Usage](#usage)
-    1. [Class instantiation](#class-instantiation)
+   1. [Class instantiation](#class-instantiation)
 1. [Example](#example)
 1. [From yup-decorators](#from-yup-decorators)
 
@@ -18,28 +19,23 @@ This library is a continuation of `yup-decorators`, enhanced with support for th
 - Named schema
 
 ```typescript
-import { a, is, namedSchema, getNamedSchema } from 'yup-decorator';
+import { a, is, namedSchema, getNamedSchema } from "yup-decorator";
 
-@namedSchema('user')
+@namedSchema("user")
 class User {
   constructor({ email, age }) {
     this.email = email;
     this.age = age;
   }
-  @is(a.string().email('Not a valid email'))
+  @is(a.string().email("Not a valid email"))
   email: string;
 
-  @is(
-    a
-      .number()
-      .lessThan(80)
-      .moreThan(10)
-  )
+  @is(a.number().lessThan(80).moreThan(10))
   age: number;
 }
 
 // you can get the yup schema with
-const userSchema = getNamedSchema('user');
+const userSchema = getNamedSchema("user");
 ```
 
 - Unnamed schema
@@ -59,7 +55,7 @@ const userSchema = getSchemaByType(User);
 - Nested validation
 
 ```typescript
-import { is, a, an, nested, schema } from 'yup-decorator';
+import { is, a, an, nested, schema } from "yup-decorator";
 
 @schema()
 export class NestedChildModel {
@@ -69,13 +65,7 @@ export class NestedChildModel {
 
 @schema()
 export class NestedModel {
-  @is(
-    an
-      .array()
-      .of(a.number())
-      .min(2)
-      .max(3)
-  )
+  @is(an.array().of(a.number()).min(2).max(3))
   array: number[];
 
   @nested()
@@ -86,9 +76,9 @@ export class NestedModel {
 - Validate:
 
 ```typescript
-import { validate } from 'yup-decorator';
+import { validate } from "yup-decorator";
 
-const user = new User({ email: 'test', age: 27 });
+const user = new User({ email: "test", age: 27 });
 
 validate({
   object: user,
@@ -96,13 +86,13 @@ validate({
     strict: true,
     abortEarly: false,
   },
-}).then(err => {
+}).then((err) => {
   // err.name; // => 'ValidationError'
   // err.errors; // => ['Not a valid email']
 });
 
 // you can also pass in the schema name as a string or a constructor
-validate({ object: user, schemaName: 'user' });
+validate({ object: user, schemaName: "user" });
 validate({ object: user, schemaName: User });
 ```
 
@@ -111,8 +101,8 @@ The sync version is `validateSync`
 - Check if object is valid or not
 
 ```typescript
-import { isValid } from 'yup-decorator';
-isValid({ object: user }).then(isValid => console.log(isValid));
+import { isValid } from "yup-decorator";
+isValid({ object: user }).then((isValid) => console.log(isValid));
 ```
 
 The sync version is `isValidSync`
@@ -120,8 +110,8 @@ The sync version is `isValidSync`
 - Validate property at path
 
 ```typescript
-import { validateAt } from 'yup-decorator';
-validateAt({ object: user, path: 'email' }).then(e => console.error(e));
+import { validateAt } from "yup-decorator";
+validateAt({ object: user, path: "email" }).then((e) => console.error(e));
 ```
 
 The sync version is `validateSyncAt`
@@ -131,8 +121,8 @@ The sync version is `validateSyncAt`
 This will coerce the property's value according to its type
 
 ```typescript
-import { cast } from 'yup-decorator';
-const user = new User({ email: 'test', age: '27' });
+import { cast } from "yup-decorator";
+const user = new User({ email: "test", age: "27" });
 const result = cast({ object: user });
 result; // {email: 'test@gmail.com', age: 27 }
 ```
@@ -168,27 +158,20 @@ class User {
   @is(a.date().required())
   birthday: Date;
 
-  @nestedType(
-    () => Job,
-    s => s.required()
-  )
+  @nestedType(() => Job, (s) => s.required())
   job: Job;
 }
 
 const user: User = await validate({
   object: {
-    job: { name: 'Dev' },
-    name: 'Mattia',
+    job: { name: "Dev" },
+    name: "Mattia",
     birthday: new Date().toString(),
   },
   schemaName: User,
 });
 
-console.log(
-  user instanceof User,
-  user.birthday instanceof Date,
-  user.job instanceof Job
-); // true, true, true
+console.log(user instanceof User, user.birthday instanceof Date, user.job instanceof Job); // true, true, true
 ```
 
 ## Example

@@ -1,10 +1,5 @@
-import { Schema } from 'yup';
-import {
-  TargetClass,
-  TargetPropertiesSchemas,
-  PropertySchema,
-  PropertyName,
-} from './types';
+import { Schema } from "yup";
+import { TargetClass, TargetPropertiesSchemas, PropertySchema, PropertyName } from "./types";
 
 class MetadataStorage {
   private _metadataMap = new Map<TargetClass, TargetPropertiesSchemas>();
@@ -53,10 +48,9 @@ class MetadataStorage {
       return null;
     }
 
-    const iterator: Array<[
-      PropertyName,
-      PropertySchema
-    ]> = inheritanceMaps.flatMap(map => Array.from(map.entries()));
+    const iterator: Array<[PropertyName, PropertySchema]> = inheritanceMaps.flatMap((map) =>
+      Array.from(map.entries()),
+    );
 
     const schemaMap = new Map(iterator);
 
@@ -65,4 +59,4 @@ class MetadataStorage {
   }
 }
 
-export { MetadataStorage }
+export { MetadataStorage };
