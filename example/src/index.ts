@@ -18,7 +18,7 @@ class User {
     this.birthday = args.birthday;
   }
 
-  @is(a.string().required().default(false))
+  @is(a.string().required().default(""))
   name: string;
 
   @is(a.date().required())

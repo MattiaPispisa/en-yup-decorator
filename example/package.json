@@ -5,8 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node --loader ts-node/esm ./src/index.ts",
-    "build": "tsc"
+    "start": "bun run src/index.ts"
   },
   "dependencies": {
     "en-yup-decorator": "file:../",
