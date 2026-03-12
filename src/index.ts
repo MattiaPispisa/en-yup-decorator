@@ -158,7 +158,13 @@ type SchemaOptions = {
  * const userSchema = getNamedSchema('user');
  * ```
  */
-function namedSchema(name: string, options?: SchemaOptions): <Class extends abstract new (...args: any) => any>(target: Class, context?: ClassDecoratorContext<Class>) => void {
+function namedSchema(
+  name: string,
+  options?: SchemaOptions,
+): <Class extends abstract new (...args: any) => any>(
+  target: Class,
+  context?: ClassDecoratorContext<Class>,
+) => void {
   return <Class extends abstract new (...args: any) => any>(
     target: Class,
     _context?: ClassDecoratorContext<Class>,
@@ -187,7 +193,12 @@ function namedSchema(name: string, options?: SchemaOptions): <Class extends abst
  * const userSchema = getSchemaByType(User);
  * ```
  */
-function schema(options?: SchemaOptions): <Class extends abstract new (...args: any) => any>(target: Class, context?: ClassDecoratorContext<Class>) => void {
+function schema(
+  options?: SchemaOptions,
+): <Class extends abstract new (...args: any) => any>(
+  target: Class,
+  context?: ClassDecoratorContext<Class>,
+) => void {
   return <Class extends abstract new (...args: any) => any>(
     target: Class,
     _context?: ClassDecoratorContext<Class>,
@@ -220,7 +231,9 @@ function schema(options?: SchemaOptions): <Class extends abstract new (...args: 
  *   array: number[];
  * ```
  */
-function is(schema: AnySchema | Lazy<any, any, any>): (_value: undefined, context: ClassFieldDecoratorContext) => void {
+function is(
+  schema: AnySchema | Lazy<any, any, any>,
+): (_value: undefined, context: ClassFieldDecoratorContext) => void {
   return <This, Value>(
     _value: undefined,
     context: ClassFieldDecoratorContext<This, Value>,
