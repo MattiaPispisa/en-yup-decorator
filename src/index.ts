@@ -63,7 +63,7 @@ function getNamedSchema(name: string): IEnYupSchema {
 /**
  * Get the schema by type
  *
- * @param {Object} target the object's type (class)
+ * @param {object} target the object's type (class)
  * @returns {IEnYupSchema} the schema
  *
  * @example
@@ -77,8 +77,8 @@ function getNamedSchema(name: string): IEnYupSchema {
  * const userSchema = getSchemaByType(User);
  * ```
  */
-function getSchemaByType(target: Object): IEnYupSchema {
-  const constructor = (target instanceof Function ? target : target?.constructor) as Function;
+function getSchemaByType(target: object): IEnYupSchema {
+  const constructor = target instanceof Function ? target : target?.constructor;
   if (!constructor) {
     throw new Error("Cannot get schema: target or target.constructor is undefined");
   }
@@ -347,13 +347,13 @@ function nestedType(
 }
 
 type IValidateArguments = {
-  object: Object;
+  object: object;
   options?: ValidateOptions;
   schemaName?: string | Function;
 };
 
 type IValidatePathArguments = {
-  object: Object;
+  object: object;
   options?: ValidateOptions;
   schemaName?: string | Function;
   path: string;
