@@ -1,7 +1,31 @@
 import { describe, expect, it } from "vitest";
 
 import { Friend, User } from "./models/user";
-import { a, getSchemaByType, validate } from "../src/index";
+import { a, getSchemaByType, is, namedSchema, schema, validate } from "../src/index";
+
+@schema({
+  compose: (o) => o.stripUnknown(),
+})
+class UserWithCompose {
+  constructor(args: { name: string }) {
+    this.name = args.name;
+  }
+
+  @is(a.string().required())
+  name: string;
+}
+
+@namedSchema("user-compose", {
+  compose: (o) => o.noUnknown(true),
+})
+class NamedUserWithCompose {
+  constructor(args: { name: string }) {
+    this.name = args.name;
+  }
+
+  @is(a.string().required())
+  name: string;
+}
 
 describe("EnYupSchema method ", () => {
   describe("preserve class instances", function () {
@@ -94,9 +118,37 @@ describe("EnYupSchema method ", () => {
   });
 
   it("should stripUnknown", async () => {
-    const schema = getSchemaByType(User).pick(["name"]).stripUnknown();
-    const result = await schema.validate({ name: "Mattia", unknownKey: "value" });
+    const s = getSchemaByType(User).pick(["name"]).stripUnknown();
+    const result = await s.validate({ name: "Mattia", unknownKey: "value" });
     expect(result).toEqual({ name: "Mattia" });
+  });
+
+  describe("compose option", () => {
+    it("should apply compose callback with @schema()", async () => {
+      const result = await validate({
+        object: { name: "Mattia", unknownKey: "value" },
+        schemaName: UserWithCompose,
+      });
+      expect(result).toEqual({ name: "Mattia" });
+      expect(result).not.toHaveProperty("unknownKey");
+    });
+
+    it("should apply compose callback with @namedSchema()", async () => {
+      const result = await validate({
+        object: { name: "Mattia" },
+        schemaName: "user-compose",
+      });
+      expect(result).toEqual({ name: "Mattia" });
+    });
+
+    it("should strip unknown keys when compose uses noUnknown(true)", async () => {
+      const result = await validate({
+        object: { name: "Mattia", unknownKey: "value" },
+        schemaName: "user-compose",
+      });
+      expect(result).toEqual({ name: "Mattia" });
+      expect(result).not.toHaveProperty("unknownKey");
+    });
   });
 });
 

@@ -87,6 +87,22 @@ function getSchemaByType(target: object): IEnYupSchema {
 
 type SchemaOptions = {
   /**
+   * Callback to compose or update the schema after it is built from field decorators.
+   *
+   * @example
+   * ```typescript
+   * @schema({
+   *   compose: (o) => o.strict().noUnknown(true),
+   * })
+   * class User {
+   *   @is(a.string().required())
+   *   name: string;
+   * }
+   * ```
+   */
+  compose?: (schema: IEnYupSchema) => IEnYupSchema;
+
+  /**
    * During validation, the object type is checked, and if it is not an instance of the target object, a new instance is created.
    * In this case, the constructor is called with the already validated properties.
    *
@@ -171,6 +187,7 @@ function namedSchema(
   ): void => {
     _flushPendingFieldMetadata(target);
     _schemas[name] = _defineSchema(target, {
+      compose: options?.compose,
       useTargetClass: options?.useTargetClass,
     });
   };
@@ -205,6 +222,7 @@ function schema(
   ): void => {
     _flushPendingFieldMetadata(target);
     _defineSchema(target, {
+      compose: options?.compose,
       useTargetClass: options?.useTargetClass,
     });
   };

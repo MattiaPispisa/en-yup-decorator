@@ -3,11 +3,11 @@ import * as yup from "yup";
 /**
  * Extended {@link yup.Schema} interface with common {@link yup.ObjectSchema} methods.
  *
- * Includes pick, omit, partial, deepPartial, from, stripUnknown.
+ * Includes pick, omit, partial, deepPartial, from, stripUnknown, noUnknown.
  */
 type IEnYupSchema = Pick<
   yup.ObjectSchema<yup.AnyObject>,
-  "pick" | "omit" | "partial" | "deepPartial" | "from" | "stripUnknown"
+  "pick" | "omit" | "partial" | "deepPartial" | "from" | "stripUnknown" | "noUnknown"
 > &
   yup.Schema;
 
@@ -53,6 +53,16 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
         return new (target as any)(validData);
       });
     });
+  }
+
+  noUnknown(message?: yup.Message): yup.ObjectSchema<yup.AnyObject, yup.AnyObject, any, "">
+  noUnknown(noAllow: boolean, message?: yup.Message): yup.ObjectSchema<yup.AnyObject, yup.AnyObject, any, "">
+  noUnknown(noAllow?: yup.Message | boolean, message?: yup.Message): yup.ObjectSchema<yup.AnyObject, yup.AnyObject, any, ""> {
+    if (typeof noAllow !== 'boolean') {
+      return this.schema.noUnknown(noAllow);
+
+    }
+    return this.schema.noUnknown(noAllow, message);
   }
 
   private schema: yup.ObjectSchema<yup.AnyObject>;
