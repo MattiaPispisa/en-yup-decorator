@@ -22,7 +22,7 @@ function createEnYupSchema({
   if (useTargetClass) {
     return new EnYupSchema({ shape, target, useTargetClass });
   }
-  return yup.object(shape) as unknown as IEnYupSchema;
+  return yup.object(shape)
 }
 
 type EnYupSchemaConstructorArguments = {
