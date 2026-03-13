@@ -1,13 +1,26 @@
 {
+  // more options https://www.typescriptlang.org/tsconfig
   "compilerOptions": {
+    "target": "ES2022",
     "module": "ESNext",
-    "target": "ES2020",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
     "strict": true,
-    "moduleResolution": "Node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true
   },
-  "ts-node": {
-    "esm": true
-  }
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

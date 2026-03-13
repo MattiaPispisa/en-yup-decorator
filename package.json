@@ -1,85 +1,96 @@
 {
   "name": "en-yup-decorator",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "A TypeScript library for creating yup schema decorators, simplifying schema validations.",
-  "license": "MIT",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MattiaPispisa/en-yup-decorator"
-  },
   "keywords": [
-    "typescript",
-    "yup",
     "decorators",
-    "validation",
     "schema",
+    "typescript",
+    "validation",
+    "yup",
     "yup-decorators"
   ],
+  "homepage": "https://github.com/MattiaPispisa/en-yup-decorator#readme",
+  "bugs": {
+    "url": "https://github.com/MattiaPispisa/en-yup-decorator/issues"
+  },
+  "license": "MIT",
   "author": {
     "name": "Mattia Pispisa",
     "email": "mattia.pispisa@gmail.com",
     "url": "https://mattiapispisa.it"
   },
-  "homepage": "https://github.com/MattiaPispisa/en-yup-decorator#readme",
-  "bugs": {
-    "url": "https://github.com/MattiaPispisa/en-yup-decorator/issues"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MattiaPispisa/en-yup-decorator"
   },
-  "engines": {
-    "node": ">=14.0.0",
-    "npm": ">=6.0.0"
+  "files": [
+    "dist",
+    "src"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
-    "start": "tsdx watch",
+    "test:coverage": "tsdx test --coverage",
+    "size": "size-limit",
+    "analyze": "size-limit --why",
+    "dev": "tsdx dev",
     "build": "tsdx build",
     "test": "tsdx test",
     "test:watch": "tsdx test --watch",
-    "test:coverage": "tsdx test --coverage",
-    "lint": "tsdx lint src",
-    "prepare": "tsdx build",
-    "size": "size-limit",
-    "analyze": "size-limit --why"
+    "lint": "tsdx lint",
+    "format": "tsdx format",
+    "format:check": "tsdx format --check",
+    "typecheck": "tsdx typecheck",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^11.1.6",
+    "@vitest/coverage-v8": "^4.0.0",
+    "bunchee": "^6.9.4",
+    "husky": "^9.1.7",
+    "size-limit": "^11.1.6",
+    "tsdx": "^2.0.0",
+    "typescript": "^5.7.2",
+    "vite-plugin-swc-transform": "^1.1.1",
+    "vitest": "^4.0.0",
+    "yup": "^1.0.0"
+  },
+  "peerDependencies": {
+    "yup": "^1.0.0"
   },
   "husky": {
     "hooks": {
       "pre-commit": "tsdx lint"
     }
   },
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
-  "module": "dist/en-yup-decorator.esm.js",
   "size-limit": [
     {
-      "path": "dist/en-yup-decorator.cjs.production.min.js",
+      "path": "dist/index.js",
       "limit": "10 KB"
     },
     {
-      "path": "dist/en-yup-decorator.esm.js",
+      "path": "dist/index.cjs",
       "limit": "10 KB"
     }
   ],
-  "dependencies": {
-    "reflect-metadata": "^0.1.0"
-  },
-  "devDependencies": {
-    "@size-limit/preset-small-lib": "^11.1.6",
-    "husky": "^9.1.7",
-    "size-limit": "^11.1.6",
-    "tsdx": "^0.14.1",
-    "tslib": "^2.8.1",
-    "typescript": "^5.7.2",
-    "yup": "^1.0.0"
-  },
-  "peerDependencies": {
-    "yup": "^1.0.0"
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

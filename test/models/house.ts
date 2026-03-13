@@ -1,4 +1,4 @@
-import { is, a, namedSchema, nestedType, schema } from '../../src/index';
+import { is, a, namedSchema, nestedType, schema } from "../../src/index";
 
 @schema()
 export class Address {
@@ -6,11 +6,11 @@ export class Address {
     this.location = args.location;
   }
 
-  @is(a.string().required('House address is required'))
+  @is(a.lazy((_) => a.string().required("House address is required")))
   location: string;
 }
 
-@namedSchema('house')
+@namedSchema("house")
 export class House {
   constructor(args: { address: Address; type: string }) {
     this.address = args.address;
@@ -23,12 +23,12 @@ export class House {
   @is(
     a
       .string()
-      .uppercase('House type must be uppercase')
+      .uppercase("House type must be uppercase")
       .oneOf(
-        ['UNIT', 'TOWNHOUSE', 'VILLA'],
-        'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA'
+        ["UNIT", "TOWNHOUSE", "VILLA"],
+        "House type must be one of the following values: UNIT, TOWNHOUSE, VILLA",
       )
-      .required('House type is required')
+      .required("House type is required"),
   )
   type: string;
 }

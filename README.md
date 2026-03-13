@@ -3,43 +3,42 @@
 Added TypeScript decorators support for [yup](https://github.com/jquense/yup)
 
 ## Table of Contents
-1. [Preface](#preface)
-1. [Usage](#usage)
-    1. [Class instantiation](#class-instantiation)
-1. [Example](#example)
-1. [From yup-decorators](#from-yup-decorators)
+
+- [En Yup Decorators](#en-yup-decorators)
+  - [Table of Contents](#table-of-contents)
+  - [Preface](#preface)
+  - [Usage](#usage)
+    - [Class instantiation](#class-instantiation)
+  - [Example](#example)
+  - [Development](#development)
+  - [Migrations](#migrations)
 
 ## Preface
 
-This library is a continuation of `yup-decorators`, enhanced with support for the latest versions of `yup` and `TypeScript`. I would like to thank the original creators of yup-decorators for their excellent work in providing a powerful and flexible way to work with yup schemas. This version aims to bring the same functionality while keeping up with updates to yup and modern TypeScript features, offering an improved and more seamless experience ([diff](#from-yup-decorators)).
+This library is a continuation of `yup-decorators`, enhanced with support for the latest versions of `yup` and `TypeScript`. I would like to thank the original creators of yup-decorators for their excellent work in providing a powerful and flexible way to work with yup schemas. This version aims to bring the same functionality while keeping up with updates to yup and modern TypeScript features, offering an improved and more seamless experience. See [Migration from yup-decorators](documentation/migrations/from-yup-decorators.md) for migration details.
 
 ## Usage
 
 - Named schema
 
 ```typescript
-import { a, is, namedSchema, getNamedSchema } from 'yup-decorator';
+import { a, is, namedSchema, getNamedSchema } from "yup-decorator";
 
-@namedSchema('user')
+@namedSchema("user")
 class User {
   constructor({ email, age }) {
     this.email = email;
     this.age = age;
   }
-  @is(a.string().email('Not a valid email'))
+  @is(a.string().email("Not a valid email"))
   email: string;
 
-  @is(
-    a
-      .number()
-      .lessThan(80)
-      .moreThan(10)
-  )
+  @is(a.number().lessThan(80).moreThan(10))
   age: number;
 }
 
 // you can get the yup schema with
-const userSchema = getNamedSchema('user');
+const userSchema = getNamedSchema("user");
 ```
 
 - Unnamed schema
@@ -59,7 +58,7 @@ const userSchema = getSchemaByType(User);
 - Nested validation
 
 ```typescript
-import { is, a, an, nested, schema } from 'yup-decorator';
+import { is, a, an, nestedType, schema } from "en-yup-decorator";
 
 @schema()
 export class NestedChildModel {
@@ -69,16 +68,10 @@ export class NestedChildModel {
 
 @schema()
 export class NestedModel {
-  @is(
-    an
-      .array()
-      .of(a.number())
-      .min(2)
-      .max(3)
-  )
+  @is(an.array().of(a.number()).min(2).max(3))
   array: number[];
 
-  @nested()
+  @nestedType(() => NestedChildModel)
   child: NestedChildModel;
 }
 ```
@@ -86,9 +79,9 @@ export class NestedModel {
 - Validate:
 
 ```typescript
-import { validate } from 'yup-decorator';
+import { validate } from "yup-decorator";
 
-const user = new User({ email: 'test', age: 27 });
+const user = new User({ email: "test", age: 27 });
 
 validate({
   object: user,
@@ -96,13 +89,13 @@ validate({
     strict: true,
     abortEarly: false,
   },
-}).then(err => {
+}).then((err) => {
   // err.name; // => 'ValidationError'
   // err.errors; // => ['Not a valid email']
 });
 
 // you can also pass in the schema name as a string or a constructor
-validate({ object: user, schemaName: 'user' });
+validate({ object: user, schemaName: "user" });
 validate({ object: user, schemaName: User });
 ```
 
@@ -111,8 +104,8 @@ The sync version is `validateSync`
 - Check if object is valid or not
 
 ```typescript
-import { isValid } from 'yup-decorator';
-isValid({ object: user }).then(isValid => console.log(isValid));
+import { isValid } from "yup-decorator";
+isValid({ object: user }).then((isValid) => console.log(isValid));
 ```
 
 The sync version is `isValidSync`
@@ -120,8 +113,8 @@ The sync version is `isValidSync`
 - Validate property at path
 
 ```typescript
-import { validateAt } from 'yup-decorator';
-validateAt({ object: user, path: 'email' }).then(e => console.error(e));
+import { validateAt } from "yup-decorator";
+validateAt({ object: user, path: "email" }).then((e) => console.error(e));
 ```
 
 The sync version is `validateSyncAt`
@@ -131,8 +124,8 @@ The sync version is `validateSyncAt`
 This will coerce the property's value according to its type
 
 ```typescript
-import { cast } from 'yup-decorator';
-const user = new User({ email: 'test', age: '27' });
+import { cast } from "yup-decorator";
+const user = new User({ email: "test", age: "27" });
 const result = cast({ object: user });
 result; // {email: 'test@gmail.com', age: 27 }
 ```
@@ -168,27 +161,20 @@ class User {
   @is(a.date().required())
   birthday: Date;
 
-  @nestedType(
-    () => Job,
-    s => s.required()
-  )
+  @nestedType(() => Job, (s) => s.required())
   job: Job;
 }
 
 const user: User = await validate({
   object: {
-    job: { name: 'Dev' },
-    name: 'Mattia',
+    job: { name: "Dev" },
+    name: "Mattia",
     birthday: new Date().toString(),
   },
   schemaName: User,
 });
 
-console.log(
-  user instanceof User,
-  user.birthday instanceof Date,
-  user.job instanceof Job
-); // true, true, true
+console.log(user instanceof User, user.birthday instanceof Date, user.job instanceof Job); // true, true, true
 ```
 
 ## Example
@@ -202,25 +188,28 @@ class Person {
     ...
   }
 
-  @is(a.string().required('Name is required')) // `is` let you register a schema to the given property
+  @is(a.string().required('Name is required')) // `is` lets you register a schema to the given property
   name: string
 
-  @nestedObject(() => Person) // `nestedRecord` let you register an object where each value is of the given property
-  contacts: Record<string,Person>
+  @nestedObject(() => Person) // `nestedObject` lets you register an object where each value is of the given type
+  contacts: Record<string, Person>
 
-  @nestedArray(() => House) // `nestedArray` let you register an array of the given type
+  @nestedArray(() => House) // `nestedArray` lets you register an array of the given type
   houses: House[]
 
-  @nested() // `nested` infer the type if known
+  @nestedType(() => Job, (s) => s.required()) // `nestedType` lets you register an object schema, with optional composition
   job: Job
 
-  nestedType(() => Country) // `nestedType` let you register an object schema to the given property
+  @nestedType(() => Country) // `nestedType` lets you register an object schema to the given property
   country: Country
 }
 ```
 
-## From yup-decorators
+## Development
 
-The main differences from `yup-decorators` are that schemas (@schema, @namedSchema) creates instances of `EnYupSchema`, so it is no longer possible to annotate a class as an object directly (~~@namedSchema(a.object().required)~~). Instead, there is a callback to enrich the generated schema (@namedSchema((s) => s.required())). This change is due to the ability to convert objects into instances of the target class during validation (`useTargetClass`). Tests and an example are provided to demonstrate this functionality.
+Tests use Vitest. Because this library relies on **TC39 Stage 3 decorators**, the test runner requires `vite-plugin-swc-transform` to transpile them. esbuild (Vitest's default transformer) does not support decorators. The `vitest.config.ts` configures SWC with `decoratorVersion: "2022-03"` for this purpose.
 
-The dependencies have been updated, and a version of `yup` >= 1.0.0 is now required.
+## Migrations
+
+- [Migration from v1 to v2](documentation/migrations/from-v1-to-v2.md) — Migrate from legacy decorators (reflect-metadata) to TC39 Stage 3 decorators.
+- [Migration from yup-decorators](documentation/migrations/from-yup-decorators.md) — Migrate from the original yup-decorators library.

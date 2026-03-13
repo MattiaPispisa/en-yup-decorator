@@ -1,9 +1,19 @@
-import * as yup from 'yup';
+import * as yup from "yup";
 
-type IEnYupSchema = Pick<yup.ObjectSchema<yup.AnyObject>, 'pick' | 'omit'> &
+/**
+ * Extended {@link yup.Schema} interface with common {@link yup.ObjectSchema} methods.
+ *
+ * Includes pick, omit, partial, deepPartial, from, stripUnknown.
+ */
+type IEnYupSchema = Pick<
+  yup.ObjectSchema<yup.AnyObject>,
+  "pick" | "omit" | "partial" | "deepPartial" | "from" | "stripUnknown"
+> &
   yup.Schema;
 
-/// a method that creates a {@link IEnYupSchema} instance
+/**
+ * a method that creates a {@link IEnYupSchema} instance
+ */
 function createEnYupSchema({
   target,
   useTargetClass,
@@ -12,19 +22,19 @@ function createEnYupSchema({
   if (useTargetClass) {
     return new EnYupSchema({ shape, target, useTargetClass });
   }
-  return yup.object(shape);
+  return yup.object(shape)
 }
 
 type EnYupSchemaConstructorArguments = {
   target: Function;
-  shape: Record<string, yup.Schema>;
+  shape: Record<string, yup.AnySchema>;
   useTargetClass?: boolean;
 };
 
 class EnYupSchema extends yup.Schema implements IEnYupSchema {
   constructor({ shape, target }: EnYupSchemaConstructorArguments) {
     super({
-      type: 'en_yup_schema',
+      type: "en_yup_schema",
       check: (input): input is typeof target => input instanceof target,
     });
     this.schema = yup.object(shape);
@@ -48,26 +58,38 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
   private schema: yup.ObjectSchema<yup.AnyObject>;
 
   pick<TKey extends string | number>(
-    keys: readonly TKey[]
-  ): yup.ObjectSchema<
-    { [K in TKey]: yup.AnyObject[K] },
-    yup.AnyObject,
-    any,
-    ''
-  > {
+    keys: readonly TKey[],
+  ): yup.ObjectSchema<{ [K in TKey]: yup.AnyObject[K] }, yup.AnyObject, any, ""> {
     return this.schema.pick(keys);
   }
 
   omit<TKey extends string | number>(
-    keys: readonly TKey[]
+    keys: readonly TKey[],
   ): yup.ObjectSchema<
     { [K in Exclude<string, TKey> | Exclude<number, TKey>]: yup.AnyObject[K] },
     yup.AnyObject,
     any,
-    ''
+    ""
   > {
     return this.schema.omit(keys);
   }
+
+  partial(): yup.ObjectSchema<yup.AnyObject> {
+    return this.schema.partial();
+  }
+
+  deepPartial(): yup.ObjectSchema<yup.AnyObject> {
+    return this.schema.deepPartial();
+  }
+
+  from(from: string, to: string, alias?: boolean): yup.ObjectSchema<yup.AnyObject> {
+    return this.schema.from(from, to, alias);
+  }
+
+  stripUnknown(): yup.ObjectSchema<yup.AnyObject> {
+    return this.schema.stripUnknown();
+  }
 }
 
-export { IEnYupSchema, createEnYupSchema };
+export type { IEnYupSchema };
+export { createEnYupSchema };

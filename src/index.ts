@@ -1,11 +1,36 @@
-import { ArraySchema, Schema, ValidateOptions } from 'yup';
-import 'reflect-metadata';
-import * as yup from 'yup';
+import {
+  ArraySchema,
+  AnySchema,
+  ValidateOptions,
+  Lazy,
+  array as yupArray,
+  lazy as yupLazy,
+  object as yupObject,
+} from "yup";
+import * as yup from "yup";
 
-import { MetadataStorage } from './metadata';
-import { createEnYupSchema, IEnYupSchema } from './en_yup_schema';
+import { MetadataStorage } from "./metadata";
+import { createEnYupSchema, IEnYupSchema } from "./en_yup_schema";
 
 const metadataStorage = new MetadataStorage();
+
+/**
+ * Pending field metadata collected by field decorators.
+ * Flushed to metadataStorage when the class decorator runs.
+ *
+ * TC39 field decorators do not receive the class, so we use this bridge.
+ */
+const _pendingFieldMetadata: Array<{
+  property: string | symbol;
+  schema: AnySchema | Lazy<any, any, any>;
+}> = [];
+
+function _flushPendingFieldMetadata(target: Function): void {
+  for (const { property, schema } of _pendingFieldMetadata) {
+    metadataStorage.addSchemaMetadata({ target, property, schema });
+  }
+  _pendingFieldMetadata.length = 0;
+}
 
 // named schema
 const _schemas: { [key: string]: IEnYupSchema } = {};
@@ -38,7 +63,7 @@ function getNamedSchema(name: string): IEnYupSchema {
 /**
  * Get the schema by type
  *
- * @param {Object} target the object's type (class)
+ * @param {object} target the object's type (class)
  * @returns {IEnYupSchema} the schema
  *
  * @example
@@ -52,8 +77,11 @@ function getNamedSchema(name: string): IEnYupSchema {
  * const userSchema = getSchemaByType(User);
  * ```
  */
-function getSchemaByType(target: Object): IEnYupSchema {
-  const constructor = target instanceof Function ? target : target.constructor;
+function getSchemaByType(target: object): IEnYupSchema {
+  const constructor = target instanceof Function ? target : target?.constructor;
+  if (!constructor) {
+    throw new Error("Cannot get schema: target or target.constructor is undefined");
+  }
   return _allSchemas.get(constructor)!;
 }
 
@@ -115,6 +143,7 @@ type SchemaOptions = {
  *
  * @param {string} name the schema name
  * @param {SchemaOptions} options schema options
+ * @returns {(target: Class, context?: ClassDecoratorContext<Class>) => void} TC39 class decorator function
  *
  * @example
  *
@@ -129,8 +158,18 @@ type SchemaOptions = {
  * const userSchema = getNamedSchema('user');
  * ```
  */
-function namedSchema(name: string, options?: SchemaOptions): ClassDecorator {
-  return target => {
+function namedSchema(
+  name: string,
+  options?: SchemaOptions,
+): <Class extends abstract new (...args: any) => any>(
+  target: Class,
+  context?: ClassDecoratorContext<Class>,
+) => void {
+  return <Class extends abstract new (...args: any) => any>(
+    target: Class,
+    _context?: ClassDecoratorContext<Class>,
+  ): void => {
+    _flushPendingFieldMetadata(target);
     _schemas[name] = _defineSchema(target, {
       useTargetClass: options?.useTargetClass,
     });
@@ -141,7 +180,7 @@ function namedSchema(name: string, options?: SchemaOptions): ClassDecorator {
  * Register a schema
  *
  * @param {SchemaOptions} options schema options
- * @return {ClassDecorator} The class decorator
+ * @returns {(target: Class, context?: ClassDecoratorContext<Class>) => void} TC39 class decorator function
  *
  * @example
  * ```typescript
@@ -154,8 +193,17 @@ function namedSchema(name: string, options?: SchemaOptions): ClassDecorator {
  * const userSchema = getSchemaByType(User);
  * ```
  */
-function schema(options?: SchemaOptions): ClassDecorator {
-  return target => {
+function schema(
+  options?: SchemaOptions,
+): <Class extends abstract new (...args: any) => any>(
+  target: Class,
+  context?: ClassDecoratorContext<Class>,
+) => void {
+  return <Class extends abstract new (...args: any) => any>(
+    target: Class,
+    _context?: ClassDecoratorContext<Class>,
+  ): void => {
+    _flushPendingFieldMetadata(target);
     _defineSchema(target, {
       useTargetClass: options?.useTargetClass,
     });
@@ -165,8 +213,8 @@ function schema(options?: SchemaOptions): ClassDecorator {
 /**
  * Register a schema to the given property
  *
- * @param {Schema} schema the schema to register
- * @return {PropertyDecorator} The property decorator
+ * @param {AnySchema | Lazy} schema the yup schema to register
+ * @returns {(_value: undefined, context: ClassFieldDecoratorContext) => void} TC39 class field decorator function
  *
  * @example
  * ```typescript
@@ -183,13 +231,14 @@ function schema(options?: SchemaOptions): ClassDecorator {
  *   array: number[];
  * ```
  */
-function is(schema: Schema<any> | yup.LazySchema<any>): PropertyDecorator {
-  return (target, property) => {
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
-      schema,
-    });
+function is(
+  schema: AnySchema | Lazy<any, any, any>,
+): (_value: undefined, context: ClassFieldDecoratorContext) => void {
+  return <This, Value>(
+    _value: undefined,
+    context: ClassFieldDecoratorContext<This, Value>,
+  ): void => {
+    _pendingFieldMetadata.push({ property: context.name, schema });
   };
 }
 
@@ -198,8 +247,8 @@ function is(schema: Schema<any> | yup.LazySchema<any>): PropertyDecorator {
  *
  * @param {() => Function} typeFunction a function that returns type of the element
  * @param {ArraySchema} arraySchema the array schema
- * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to rich the element schema
- * @returns {PropertyDecorator}
+ * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to compose the element schema
+ * @returns {(_value: undefined, context: ClassFieldDecoratorContext) => void} TC39 class field decorator function
  *
  * @example
  * ```typescript
@@ -209,63 +258,67 @@ function is(schema: Schema<any> | yup.LazySchema<any>): PropertyDecorator {
  */
 function nestedArray(
   typeFunction: () => Function,
-  arraySchema: ArraySchema<any, any> = yup.array(),
-  elementSchema?: (schema: IEnYupSchema) => IEnYupSchema
-): PropertyDecorator {
-  return (target, property) => {
+  arraySchema: ArraySchema<any, any> = yupArray(),
+  elementSchema?: (schema: IEnYupSchema) => IEnYupSchema,
+): (_value: undefined, context: ClassFieldDecoratorContext) => void {
+  return <This, Value>(
+    _value: undefined,
+    context: ClassFieldDecoratorContext<This, Value>,
+  ): void => {
     const nestedType = typeFunction();
     const nestedElementSchema = _getObjectSchema(nestedType, {
       compose: elementSchema,
     });
 
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
+    _pendingFieldMetadata.push({
+      property: context.name,
       schema: arraySchema.of(nestedElementSchema),
     });
   };
 }
 
 /**
- * Register an object for the given property where each value have the same type: `typeFunction`. 
- * 
+ * Register an object for the given property where each value has the same type: `typeFunction`.
+ *
  * @param {() => Function} typeFunction a function that returns type of the element
- * @param recordSchema callback to rich the record schema
- * @param elementSchema callback to rich the element schema
- * @returns {PropertyDecorator}
- * 
+ * @param {(schema: AnySchema) => AnySchema} objectSchema callback to compose the record schema
+ * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to compose the element schema
+ * @returns {(_value: undefined, context: ClassFieldDecoratorContext) => void} TC39 class field decorator function
+ *
  * @example
  * ```typescript
- *    \@nestedRecord(() => Person,(s) => s.required('Contacts are required'))
+ *    \@nestedObject(() => Person, (s) => s.required('Contacts are required'))
  *    contacts: Record<string, Person>;
  * ```
  */
 function nestedObject(
   typeFunction: () => Function,
-  objectSchema?: (schema: Schema<any>) => Schema<any>,
-  elementSchema?: (schema: IEnYupSchema) => IEnYupSchema
-): PropertyDecorator {
-  return (target, property) => {
+  objectSchema?: (schema: AnySchema) => AnySchema,
+  elementSchema?: (schema: IEnYupSchema) => IEnYupSchema,
+): (_value: undefined, context: ClassFieldDecoratorContext) => void {
+  return <This, Value>(
+    _value: undefined,
+    context: ClassFieldDecoratorContext<This, Value>,
+  ): void => {
     const nestedType = typeFunction();
     const nestedElementSchema = _getObjectSchema(nestedType, {
       compose: elementSchema,
     });
-    const schema = _recordSchema(nestedElementSchema, objectSchema)
+    const recordSchema = _recordSchema(nestedElementSchema, objectSchema);
 
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
-      schema,
+    _pendingFieldMetadata.push({
+      property: context.name,
+      schema: recordSchema,
     });
   };
 }
 
 /**
- * Register an object schema to the given property. Use this when the property type is unknown
+ * Register an object schema to the given property. Use this when the property type is unknown.
  *
- * @param {() => Function} typeFunction  a function that returns type of the element
- * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to rich the element schema
- * @returns {PropertyDecorator}
+ * @param {() => Function} typeFunction a function that returns type of the element
+ * @param {(schema: IEnYupSchema) => IEnYupSchema} elementSchema callback to compose the element schema
+ * @returns {(_value: undefined, context: ClassFieldDecoratorContext) => void} TC39 class field decorator function
  *
  * @example
  * ```typescript
@@ -275,63 +328,32 @@ function nestedObject(
  */
 function nestedType(
   typeFunction: () => Function,
-  elementSchema?: (schema: IEnYupSchema) => IEnYupSchema
-): PropertyDecorator {
-  return (target, property) => {
+  elementSchema?: (schema: IEnYupSchema) => IEnYupSchema,
+): (_value: undefined, context: ClassFieldDecoratorContext) => void {
+  return <This, Value>(
+    _value: undefined,
+    context: ClassFieldDecoratorContext<This, Value>,
+  ): void => {
     const nestedType = typeFunction();
     const nestedSchema = _getObjectSchema(nestedType, {
       compose: elementSchema,
     });
 
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
-      schema: nestedSchema,
-    });
-  };
-}
-
-/**
- * Register an object schema to the given property.
- * Use this when the property type is known and can be extracted using reflect-metadata
- *
- * @param {(schema: IEnYupSchema) => IEnYupSchema} schema callback to rich the element schema
- * @return {PropertyDecorator}
- *
- * @example
- * ```typescript
- *    \@nested((schema) => schema.required('Job is required'))
- *    job: Job;
- * ```
- */
-function nested(
-  schema?: (schema: IEnYupSchema) => IEnYupSchema
-): PropertyDecorator {
-  return (target, property) => {
-    const nestedType = (Reflect as any).getMetadata(
-      'design:type',
-      target,
-      property
-    );
-
-    const nestedSchema = _getObjectSchema(nestedType, { compose: schema });
-
-    metadataStorage.addSchemaMetadata({
-      target: target instanceof Function ? target : target.constructor,
-      property,
+    _pendingFieldMetadata.push({
+      property: context.name,
       schema: nestedSchema,
     });
   };
 }
 
 type IValidateArguments = {
-  object: Object;
+  object: object;
   options?: ValidateOptions;
   schemaName?: string | Function;
 };
 
 type IValidatePathArguments = {
-  object: Object;
+  object: object;
   options?: ValidateOptions;
   schemaName?: string | Function;
   path: string;
@@ -368,11 +390,7 @@ type IValidatePathArguments = {
  *  validate({ object: user, schemaName: User });
  * ```
  */
-function validate({
-  schemaName,
-  object,
-  options,
-}: IValidateArguments): Promise<any> {
+function validate({ schemaName, object, options }: IValidateArguments): Promise<any> {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validate(object, options);
 }
@@ -408,11 +426,7 @@ function validate({
  *  validateSync({ object: user, schemaName: User });
  * ```
  */
-function validateSync({
-  schemaName,
-  object,
-  options,
-}: IValidateArguments): any {
+function validateSync({ schemaName, object, options }: IValidateArguments): any {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validateSync(object, options);
 }
@@ -449,12 +463,7 @@ function validateSync({
  *  validateAt({ object: user, schemaName: User, path: 'email' });
  * ```
  */
-function validateAt({
-  schemaName,
-  path,
-  object,
-  options,
-}: IValidatePathArguments) {
+function validateAt({ schemaName, path, object, options }: IValidatePathArguments) {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validateAt(path, object, options);
 }
@@ -491,12 +500,7 @@ function validateAt({
  *  validateSyncAt({ object: user, schemaName: User, path: 'email' });
  * ```
  */
-function validateSyncAt({
-  schemaName,
-  path,
-  object,
-  options,
-}: IValidatePathArguments) {
+function validateSyncAt({ schemaName, path, object, options }: IValidatePathArguments) {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.validateSyncAt(path, object, options);
 }
@@ -533,11 +537,7 @@ function validateSyncAt({
  *  isValid({ object: user, schemaName: User });
  * ```
  */
-function isValid({
-  schemaName,
-  object,
-  options,
-}: IValidateArguments): Promise<boolean> {
+function isValid({ schemaName, object, options }: IValidateArguments): Promise<boolean> {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.isValid(object, options);
 }
@@ -573,11 +573,7 @@ function isValid({
  *  isValidSync({ object: user, schemaName: User });
  * ```
  */
-function isValidSync({
-  schemaName,
-  object,
-  options,
-}: IValidateArguments): boolean {
+function isValidSync({ schemaName, object, options }: IValidateArguments): boolean {
   const objectSchema = _getSchema({ object, schemaName });
   return objectSchema.isValidSync(object, options);
 }
@@ -609,12 +605,12 @@ function _getSchema({
 }: {
   object: object;
   schemaName?: string | Function;
-}): Schema<any> {
-  if (object === null || typeof object !== 'object') {
-    throw new Error('Cannot validate non object types');
+}): AnySchema {
+  if (object === null || typeof object !== "object") {
+    throw new Error("Cannot validate non object types");
   }
 
-  if (typeof schemaName === 'string') {
+  if (typeof schemaName === "string") {
     return getNamedSchema(schemaName);
   }
 
@@ -632,10 +628,7 @@ type _GetSchemaOptions = {
  * @param {_GetSchemaOptions} options
  * @returns {ObjectSchema}
  */
-function _getObjectSchema(
-  type: Function,
-  options: _GetSchemaOptions
-): Schema<any> {
+function _getObjectSchema(type: Function, options: _GetSchemaOptions): AnySchema {
   const { compose } = options;
   const schemaByType = getSchemaByType(type);
 
@@ -660,20 +653,18 @@ type _DefineSchemaOptions = {
  * @param {ObjectSchema} objectSchema
  * @returns {ObjectSchema} the composed object schema
  */
-function _defineSchema(
-  target: Function,
-  options: _DefineSchemaOptions
-): IEnYupSchema {
+function _defineSchema(target: Function, options: _DefineSchemaOptions): IEnYupSchema {
   const { compose, useTargetClass } = options;
 
   const schemaMap = metadataStorage.findSchemaMetadata(target);
 
   // compose shape
-  const objectShape: Record<string, Schema<any>> = Array.from(
-    schemaMap?.entries() ?? []
-  ).reduce((currentShape, [property, schema]) => {
-    return { ...currentShape, [property]: schema };
-  }, {});
+  const objectShape: Record<string, AnySchema> = Array.from(schemaMap?.entries() ?? []).reduce(
+    (currentShape, [property, schema]) => {
+      return { ...currentShape, [property]: schema };
+    },
+    {},
+  );
 
   const targetSchema = createEnYupSchema({
     shape: objectShape,
@@ -688,35 +679,36 @@ function _defineSchema(
 }
 
 /**
- * Compose a lazy schema where value must be an object 
+ * Compose a lazy schema where value must be an object
  * and each entry must be [key: string]: valueSchema
  *
- * @param {Schema} valueSchema
+ * @param {AnySchema} valueSchema
  * @param {Function} objectSchema
  * @returns {LazySchema}
  */
 function _recordSchema(
-  valueSchema: Schema<any>,
-  objectSchema: (schema: Schema<any>) => Schema<any> = (id) => id
-): yup.LazySchema<any> {
-  return yup.lazy((object) => {
-    if (object && typeof object === 'object' && !Array.isArray(object)) {
+  valueSchema: AnySchema,
+  objectSchema: (schema: AnySchema) => AnySchema = (id) => id,
+): Lazy<any, any, any> {
+  return yupLazy((object) => {
+    if (object && typeof object === "object" && !Array.isArray(object)) {
       // dynamic shape for each key in the object
-      const shape = Object.keys(object).reduce<Record<string, Schema<any>>>((acc, key) => {
+      const shape = Object.keys(object).reduce<Record<string, AnySchema>>((acc, key) => {
         acc[key] = valueSchema;
         return acc;
       }, {});
 
-      return objectSchema(yup.object().shape(shape));
+      return objectSchema(yupObject().shape(shape));
     }
 
-    return objectSchema(yup.object());
+    return objectSchema(yupObject());
   });
 }
 
 const a = yup;
 const an = yup;
 
+export type { IValidateArguments, IValidatePathArguments, IEnYupSchema };
 export {
   cast,
   isValidSync,
@@ -725,7 +717,6 @@ export {
   namedSchema,
   nestedObject,
   nestedType,
-  nested,
   nestedArray,
   schema,
   a,
@@ -736,7 +727,4 @@ export {
   validateSyncAt,
   validateAt,
   is,
-  IValidateArguments,
-  IValidatePathArguments,
-  IEnYupSchema,
 };

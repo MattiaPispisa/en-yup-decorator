@@ -1,8 +1,8 @@
-import { Lazy, Schema } from 'yup';
+import { Lazy, AnySchema } from "yup";
 
 type PropertyName = string | symbol;
-type PropertySchema = Schema<any> | Lazy<Schema<any>>;
+type PropertySchema = AnySchema | Lazy<any, any, any>;
 type TargetPropertiesSchemas = Map<PropertyName, PropertySchema>;
 type TargetClass = Function;
 
-export { PropertyName, PropertySchema, TargetClass, TargetPropertiesSchemas };
+export type { PropertyName, PropertySchema, TargetClass, TargetPropertiesSchemas };

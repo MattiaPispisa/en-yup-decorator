@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import {
   cast,
   isValid,
@@ -6,49 +8,45 @@ import {
   validateAt,
   validateSync,
   validateSyncAt,
-} from '../src/index';
-import { Person } from './models/person';
-import { Address, House } from './models/house';
+} from "../src/index";
+import { Person } from "./models/person";
+import { Address, House } from "./models/house";
 
-describe('validate simple object', function() {
-  describe('test validate', function() {
-    it('should allow valid objects', async () => {
+describe("validate simple object", function () {
+  describe("test validate", function () {
+    it("should allow valid objects", async () => {
       const object = getValidPerson();
       const actual = await validate({ object, schemaName: Person });
       expect(actual).toEqual(object);
     });
 
-    it('should reject invalid objects', async () => {
+    it("should reject invalid objects", async () => {
       const object = getInvalidPerson();
-      await expect(
-        validate({ object, schemaName: Person })
-      ).rejects.toMatchObject({
-        name: 'ValidationError',
-        errors: [
-          'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
-        ],
+      await expect(validate({ object, schemaName: Person })).rejects.toMatchObject({
+        name: "ValidationError",
+        errors: ["House type must be one of the following values: UNIT, TOWNHOUSE, VILLA"],
       });
     });
 
-    it('should accept validate options', async () => {
+    it("should accept validate options", async () => {
       const object = getInvalidPerson();
       await expect(
         validate({
           object,
           schemaName: Person,
           options: { abortEarly: false, strict: true },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
+        name: "ValidationError",
         errors: [
-          'Not a valid email',
-          'age must be greater than 0',
-          'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
+          "Not a valid email",
+          "age must be greater than 0",
+          "House type must be one of the following values: UNIT, TOWNHOUSE, VILLA",
         ], // Specific error messages
       });
     });
 
-    it('should infer object type', async () => {
+    it("should infer object type", async () => {
       const object = getInvalidPerson({ includesHouse: false });
       await expect(
         validate({
@@ -57,43 +55,41 @@ describe('validate simple object', function() {
             strict: true,
             abortEarly: false,
           },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
-        errors: ['Not a valid email', 'age must be greater than 0'],
+        name: "ValidationError",
+        errors: ["Not a valid email", "age must be greater than 0"],
       });
     });
 
-    it('should use schema name', async () => {
+    it("should use schema name", async () => {
       const object = getInvalidPerson();
       await expect(
         validate({
           object,
-          schemaName: 'person',
+          schemaName: "person",
           options: {
             strict: true,
             abortEarly: false,
           },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
+        name: "ValidationError",
         errors: [
-          'Not a valid email',
-          'age must be greater than 0',
-          'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
+          "Not a valid email",
+          "age must be greater than 0",
+          "House type must be one of the following values: UNIT, TOWNHOUSE, VILLA",
         ],
       });
     });
 
-    it('should throw error validating null object', async () => {
-      expect(() =>
-        validate({ object: null, schemaName: Person } as any)
-      ).toThrow(
-        expect.objectContaining(new Error('Cannot validate non object types'))
+    it("should throw error validating null object", async () => {
+      expect(() => validate({ object: null, schemaName: Person } as any)).toThrow(
+        expect.objectContaining(new Error("Cannot validate non object types")),
       );
     });
 
-    it('should allow valid objects', async () => {
+    it("should allow valid objects", async () => {
       const object = getValidPerson();
       const actual = await validate({ object, schemaName: Person });
       expect(actual).toBe(object);
@@ -101,14 +97,14 @@ describe('validate simple object', function() {
   });
 });
 
-describe('test validate sync', function() {
-  it('should allow valid objects', async () => {
+describe("test validate sync", function () {
+  it("should allow valid objects", async () => {
     const object = getValidPerson();
     const actual = validateSync({ object, schemaName: Person });
     expect(actual).toBe(object);
   });
 
-  it('should reject invalid objects', async () => {
+  it("should reject invalid objects", async () => {
     const object = getInvalidPerson();
     expect(() => {
       validateSync({
@@ -118,95 +114,93 @@ describe('test validate sync', function() {
       });
     }).toThrow(
       expect.objectContaining({
-        name: 'ValidationError',
+        name: "ValidationError",
         errors: [
-          'Not a valid email',
-          'age must be greater than 0',
-          'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
+          "Not a valid email",
+          "age must be greater than 0",
+          "House type must be one of the following values: UNIT, TOWNHOUSE, VILLA",
         ],
-      })
+      }),
     );
   });
 });
 
-describe('validate object path', function() {
-  describe('test validateAt', function() {
-    it('should allow valid objects', async () => {
+describe("validate object path", function () {
+  describe("test validateAt", function () {
+    it("should allow valid objects", async () => {
       const object = getValidPerson();
       const actual = await validateAt({
         object,
         schemaName: Person,
-        path: 'email',
+        path: "email",
       });
       expect(actual).toBe(object.email);
     });
 
-    it('should reject invalid objects', async () => {
+    it("should reject invalid objects", async () => {
       const object = getInvalidPerson();
       await expect(
         validateAt({
           object,
           schemaName: Person,
-          path: 'email',
-        })
+          path: "email",
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
-        errors: ['Not a valid email'],
+        name: "ValidationError",
+        errors: ["Not a valid email"],
       });
     });
 
-    it('should accept validate options', async () => {
+    it("should accept validate options", async () => {
       const object = getInvalidPerson({ email: 1 });
       await expect(
         validateAt({
-          path: 'email',
+          path: "email",
           object,
           schemaName: Person,
           options: {
             strict: true,
           },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
-        errors: [
-          'email must be a `string` type, but the final value was: `1`.',
-        ],
+        name: "ValidationError",
+        errors: ["email must be a `string` type, but the final value was: `1`."],
       });
     });
   });
 
-  describe('test validateAtSync', function() {
-    it('should allow valid objects', async () => {
+  describe("test validateAtSync", function () {
+    it("should allow valid objects", async () => {
       const object = getValidPerson();
       const actual = validateSyncAt({
         object,
         schemaName: Person,
-        path: 'email',
+        path: "email",
       });
       expect(actual).toBe(object.email);
     });
 
-    it('should reject invalid objects', async () => {
+    it("should reject invalid objects", async () => {
       const object = getInvalidPerson();
       expect(() =>
         validateSyncAt({
           object,
           schemaName: Person,
-          path: 'email',
-        })
+          path: "email",
+        }),
       ).toThrow(
         expect.objectContaining({
-          name: 'ValidationError',
-          errors: ['Not a valid email'],
-        })
+          name: "ValidationError",
+          errors: ["Not a valid email"],
+        }),
       );
     });
   });
 });
 
-describe('Testing isValid', function() {
-  describe('test isValid', function() {
-    it('should allow valid objects', async () => {
+describe("Testing isValid", function () {
+  describe("test isValid", function () {
+    it("should allow valid objects", async () => {
       const object = getValidPerson();
       const result = await isValid({
         object,
@@ -215,15 +209,15 @@ describe('Testing isValid', function() {
       expect(result).toBe(true);
     });
 
-    it('should reject invalid objects', async () => {
+    it("should reject invalid objects", async () => {
       const object = getInvalidPerson();
       const result = await isValid({ object, schemaName: Person });
       expect(result).toBe(false);
     });
   });
 
-  describe('test isValidSync', function() {
-    it('should allow valid objects', async () => {
+  describe("test isValidSync", function () {
+    it("should allow valid objects", async () => {
       const object = getValidPerson();
       const actual = isValidSync({
         object,
@@ -232,7 +226,7 @@ describe('Testing isValid', function() {
       expect(actual).toBe(true);
     });
 
-    it('should reject invalid objects', async () => {
+    it("should reject invalid objects", async () => {
       const object = getInvalidPerson();
       const actual = isValidSync({
         object,
@@ -243,12 +237,12 @@ describe('Testing isValid', function() {
   });
 });
 
-describe('Testing cast', function() {
-  describe('test cast', function() {
-    it('should coerce values', async () => {
+describe("Testing cast", function () {
+  describe("test cast", function () {
+    it("should coerce values", async () => {
       const object = getInvalidPerson({
-        age: '1',
-        houseType: 'house',
+        age: "1",
+        houseType: "house",
       });
       const actual = cast({ object, schemaName: Person });
       expect(actual).toEqual({
@@ -257,9 +251,9 @@ describe('Testing cast', function() {
         house: {
           ...object.house,
           address: {
-            location: 'Italy',
+            location: "Italy",
           },
-          type: 'HOUSE',
+          type: "HOUSE",
         },
       });
     });
@@ -279,10 +273,10 @@ function getValidPerson({
 } = {}): Person {
   return new Person({
     age: ifNullOrUndefined(age, 20),
-    email: ifNullOrUndefined(email, 'test@gmail.com'),
+    email: ifNullOrUndefined(email, "test@gmail.com"),
     house: new House({
-      address: new Address({ location: ifNullOrUndefined(address, 'Italy') }),
-      type: ifNullOrUndefined(houseType, 'VILLA'),
+      address: new Address({ location: ifNullOrUndefined(address, "Italy") }),
+      type: ifNullOrUndefined(houseType, "VILLA"),
     }),
   });
 }
@@ -300,12 +294,12 @@ function getInvalidPerson({
 } = {}) {
   return new Person({
     age: ifNullOrUndefined(age, -1),
-    email: ifNullOrUndefined(email, 'test'),
+    email: ifNullOrUndefined(email, "test"),
 
     house: includesHouse
       ? new House({
-          type: ifNullOrUndefined(houseType, 'HOUSE'),
-          address: new Address({ location: 'Italy' }),
+          type: ifNullOrUndefined(houseType, "HOUSE"),
+          address: new Address({ location: "Italy" }),
         })
       : undefined,
   });

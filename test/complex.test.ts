@@ -1,74 +1,74 @@
-import { Person } from './models/person';
-import { validate } from '../src/index';
-import { Employee } from './models/employee';
-import { Address, House } from './models/house';
-import { Job } from './models/job';
+import { describe, expect, it } from "vitest";
 
-describe('validate complex object', function () {
-  describe('test validate', function () {
-    it('should allow valid objects', async () => {
+import { Person } from "./models/person";
+import { validate } from "../src/index";
+import { Employee } from "./models/employee";
+import { Address, House } from "./models/house";
+import { Job } from "./models/job";
+
+describe("validate complex object", function () {
+  describe("test validate", function () {
+    it("should allow valid objects", async () => {
       const object = getValidEmployee();
       const actual = await validate({ object, schemaName: Employee });
       expect(actual).toEqual(object);
     });
 
-    it('should validate nested record', async () => {
+    it("should validate nested record", async () => {
       const object = getValidEmployee({
         contacts: {
-          '1': getValidEmployee(),
-          '2': getValidEmployee(),
-        }
-      })
+          "1": getValidEmployee(),
+          "2": getValidEmployee(),
+        },
+      });
       const actual = await validate({ object, schemaName: Employee });
       expect(actual).toEqual(object);
-    })
+    });
 
-    it('should reject invalid objects', async () => {
+    it("should reject invalid objects", async () => {
       const object = getInvalidEmployee();
-      await expect(
-        validate({ object, schemaName: Employee })
-      ).rejects.toMatchObject({
-        name: 'ValidationError',
-        errors: ['Employee ID is required'],
+      await expect(validate({ object, schemaName: Employee })).rejects.toMatchObject({
+        name: "ValidationError",
+        errors: ["Employee ID is required"],
       });
     });
 
-    it('should reject invalid nestedRecord', async () => {
+    it("should reject invalid nestedRecord", async () => {
       const object = getValidEmployee({
         contacts: {
-          '1': getValidEmployee(),
-          '2': new Person({ age: 120, house: undefined, email: 'test' }),
-        }
-      })
+          "1": getValidEmployee(),
+          "2": new Person({ age: 120, house: undefined, email: "test" }),
+        },
+      });
       await expect(
         validate({
           object,
           schemaName: Employee,
-          options: { strict: true, abortEarly: false }
-        })
+          options: { strict: true, abortEarly: false },
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
-        errors: ['Not a valid email', 'contacts.2.age must be less than 100'],
+        name: "ValidationError",
+        errors: ["Not a valid email", "contacts.2.age must be less than 100"],
       });
-    })
+    });
 
-    it('should reject invalid nestedRecord', async () => {
+    it("should reject invalid nestedRecord", async () => {
       const object = getValidEmployee({
-        contacts: true as any
-      })
+        contacts: true as any,
+      });
       await expect(
         validate({
           object,
           schemaName: Employee,
-          options: { strict: true, abortEarly: false }
-        })
+          options: { strict: true, abortEarly: false },
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
-        errors: ['contacts must be a `object` type, but the final value was: `true`.'],
+        name: "ValidationError",
+        errors: ["contacts must be a `object` type, but the final value was: `true`."],
       });
-    })
+    });
 
-    it('should accept validate options', async () => {
+    it("should accept validate options", async () => {
       let object = getInvalidEmployee();
       await expect(
         validate({
@@ -78,17 +78,17 @@ describe('validate complex object', function () {
             strict: true,
             abortEarly: false,
           },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
+        name: "ValidationError",
         errors: [
-          'Not a valid email',
-          'age must be greater than 0',
-          'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
-          'Job title must be upper case',
-          'Office name is required',
-          'Office location is required',
-          'Employee ID is required',
+          "Not a valid email",
+          "age must be greater than 0",
+          "House type must be one of the following values: UNIT, TOWNHOUSE, VILLA",
+          "Job title must be upper case",
+          "Office name is required",
+          "Office location is required",
+          "Employee ID is required",
         ],
       });
 
@@ -101,15 +101,15 @@ describe('validate complex object', function () {
             strict: true,
             abortEarly: false,
           },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
+        name: "ValidationError",
         errors: [
-          'Not a valid email',
-          'age must be greater than 0',
-          'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
-          'Job is required',
-          'Employee ID is required',
+          "Not a valid email",
+          "age must be greater than 0",
+          "House type must be one of the following values: UNIT, TOWNHOUSE, VILLA",
+          "Job is required",
+          "Employee ID is required",
         ],
       });
 
@@ -122,15 +122,15 @@ describe('validate complex object', function () {
             strict: true,
             abortEarly: false,
           },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
+        name: "ValidationError",
         errors: [
-          'Not a valid email',
-          'age must be greater than 0',
-          'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
-          'Job title is required and must be upper case',
-          'Employee ID is required',
+          "Not a valid email",
+          "age must be greater than 0",
+          "House type must be one of the following values: UNIT, TOWNHOUSE, VILLA",
+          "Job title is required and must be upper case",
+          "Employee ID is required",
         ],
       });
 
@@ -143,21 +143,21 @@ describe('validate complex object', function () {
             strict: true,
             abortEarly: false,
           },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
+        name: "ValidationError",
         errors: [
-          'Not a valid email',
-          'age must be greater than 0',
-          'Job title must be upper case',
-          'Office name is required',
-          'Office location is required',
-          'Employee ID is required',
+          "Not a valid email",
+          "age must be greater than 0",
+          "Job title must be upper case",
+          "Office name is required",
+          "Office location is required",
+          "Employee ID is required",
         ],
       });
     });
 
-    it('should infer object type', async () => {
+    it("should infer object type", async () => {
       const object = getInvalidEmployee({ includesHouse: false });
       await expect(
         validate({
@@ -166,37 +166,37 @@ describe('validate complex object', function () {
             strict: true,
             abortEarly: false,
           },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
+        name: "ValidationError",
         errors: [
-          'Not a valid email',
-          'age must be greater than 0',
-          'Job title must be upper case',
-          'Office name is required',
-          'Office location is required',
-          'Employee ID is required',
+          "Not a valid email",
+          "age must be greater than 0",
+          "Job title must be upper case",
+          "Office name is required",
+          "Office location is required",
+          "Employee ID is required",
         ],
       });
     });
 
-    it('should use schema name', async () => {
+    it("should use schema name", async () => {
       const object = getInvalidEmployee();
       await expect(
         validate({
           object,
-          schemaName: 'person',
+          schemaName: "person",
           options: {
             strict: true,
             abortEarly: false,
           },
-        })
+        }),
       ).rejects.toMatchObject({
-        name: 'ValidationError',
+        name: "ValidationError",
         errors: [
-          'Not a valid email',
-          'age must be greater than 0',
-          'House type must be one of the following values: UNIT, TOWNHOUSE, VILLA',
+          "Not a valid email",
+          "age must be greater than 0",
+          "House type must be one of the following values: UNIT, TOWNHOUSE, VILLA",
         ],
       });
     });
@@ -215,28 +215,28 @@ function getValidEmployee({
   age?: any;
   address?: string;
   houseType?: string;
-  contacts?: Record<string, Person>
+  contacts?: Record<string, Person>;
 } = {}) {
   return new Employee({
-    employeeId: '123',
+    employeeId: "123",
     age: ifNullOrUndefined(age, 20),
-    email: ifNullOrUndefined(email, 'test@gmail.com'),
+    email: ifNullOrUndefined(email, "test@gmail.com"),
     job: new Job({
-      jobTitle: 'DEVELOPER',
+      jobTitle: "DEVELOPER",
       office: [
         {
-          location: 'Italy',
-          name: 'South Office',
+          location: "Italy",
+          name: "South Office",
         },
         {
-          location: 'Italy',
-          name: 'North Office',
+          location: "Italy",
+          name: "North Office",
         },
       ],
     }),
     house: new House({
-      type: houseType ?? 'VILLA',
-      address: new Address({ location: address ?? 'Italy' }),
+      type: houseType ?? "VILLA",
+      address: new Address({ location: address ?? "Italy" }),
     }),
     contacts,
   });
@@ -261,17 +261,17 @@ function getInvalidEmployee({
 } = {}) {
   return new Employee({
     age: ifNullOrUndefined(age, -1),
-    email: email ?? 'test',
+    email: email ?? "test",
     job: includesJob
       ? new Job({
-        jobTitle: includesOffice ? 'dev' : undefined,
-        office: includesOffice ? [{} as any] : undefined,
-      } as any)
+          jobTitle: includesOffice ? "dev" : undefined,
+          office: includesOffice ? [{} as any] : undefined,
+        } as any)
       : undefined,
     house: includesHouse
       ? new House({
-        type: houseType ?? 'HOUSE',
-      } as any)
+          type: houseType ?? "HOUSE",
+        } as any)
       : undefined,
     contacts: includeContacts ? {} : undefined,
   } as any);
