@@ -61,16 +61,16 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^11.1.6",
-    "@vitest/coverage-v8": "^4.0.0",
+    "@size-limit/preset-small-lib": "^11.2.0",
+    "@vitest/coverage-v8": "^4.1.2",
     "bunchee": "^6.9.4",
     "husky": "^9.1.7",
-    "size-limit": "^11.1.6",
+    "size-limit": "^11.2.0",
     "tsdx": "^2.0.0",
-    "typescript": "^5.7.2",
+    "typescript": "^5.9.3",
     "vite-plugin-swc-transform": "^1.1.1",
-    "vitest": "^4.0.0",
-    "yup": "^1.0.0"
+    "vitest": "^4.1.2",
+    "yup": "^1.7.1"
   },
   "peerDependencies": {
     "yup": "^1.0.0"
