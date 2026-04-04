@@ -41,16 +41,38 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
 
     this.withMutation(() => {
       this.transform((value, _, ctx) => {
-        const validData = this.schema.validateSync(value, {
-          abortEarly: false,
-          strict: false,
-        });
-
         if (ctx.isType(value)) {
-          return validData;
+          return value;
         }
 
-        return new (target as any)(validData);
+        // apply cast and transform to the original value, 
+        // in order to get the correct types for the constructor
+        const castedData = this.schema.cast(value, {
+          assert: false,
+          stripUnknown: false
+        });
+
+        return new (target as any)(castedData);
+      });
+
+      this.test({
+        name: 'en-yup-async-validation',
+        test: async (value, testContext) => {
+          try {
+            // after cast value should be an instance of the target class
+            await this.schema.validate(value, {
+              abortEarly: testContext.options.abortEarly ?? false,
+              strict: testContext.options.strict ?? false,
+              context: testContext.options.context,
+            });
+            return true;
+          } catch (err) {
+            if (err instanceof yup.ValidationError) {
+              return err;
+            }
+            throw err;
+          }
+        },
       });
     });
   }
