@@ -1,5 +1,10 @@
 # En Yup Decorators
 
+[![package badge][package_badge]][npm_link]
+[![codecov][codecov_badge]][codecov_link]
+[![ci badge][ci_badge]][ci_link]
+
+
 Added TypeScript decorators support for [yup](https://github.com/jquense/yup)
 
 ## Table of Contents
@@ -213,3 +218,10 @@ Tests use Vitest. Because this library relies on **TC39 Stage 3 decorators**, th
 
 - [Migration from v1 to v2](documentation/migrations/from-v1-to-v2.md) — Migrate from legacy decorators (reflect-metadata) to TC39 Stage 3 decorators.
 - [Migration from yup-decorators](documentation/migrations/from-yup-decorators.md) — Migrate from the original yup-decorators library.
+
+[package_badge]: https://img.shields.io/npm/v/en-yup-decorator
+[npm_link]: https://www.npmjs.com/package/en-yup-decorator
+[codecov_badge]: https://img.shields.io/codecov/c/github/MattiaPispisa/en-yup-decorator/main?logo=codecov
+[codecov_link]: https://app.codecov.io/gh/MattiaPispisa/en-yup-decorator
+[ci_badge]: https://img.shields.io/github/actions/workflow/status/MattiaPispisa/en-yup-decorator/main.yml
+[ci_link]: https://github.com/MattiaPispisa/en-yup-decorator/actions/workflows/main.yml
