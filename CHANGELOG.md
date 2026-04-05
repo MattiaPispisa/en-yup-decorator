@@ -1,4 +1,8 @@
-# [Unreleased]
+# 2.0.0 (2026-04-05)
+
+### Added
+
+- Can `compose` schema in `schema` and `namedSchema`
 
 ### Changed
 

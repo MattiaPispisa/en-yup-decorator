@@ -39,6 +39,8 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
     });
     this.schema = yup.object(shape);
 
+    // we need to use mutation in order to preserve the instance otherwise a copy will convert
+    // the value in a plain object
     this.withMutation(() => {
       this.transform((value, _, ctx) => {
         if (ctx.isType(value)) {
@@ -48,6 +50,8 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
         // apply cast and transform to the original value, 
         // in order to get the correct types for the constructor
         const castedData = this.schema.cast(value, {
+          // assert is false to avoid throwing errors.
+          // let the validation step throw the errors
           assert: false,
           stripUnknown: false
         });
@@ -56,7 +60,7 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
       });
 
       this.test({
-        name: 'en-yup-async-validation',
+        name: 'en_yup_async_validation',
         test: async (value, testContext) => {
           try {
             // after cast value should be an instance of the target class
