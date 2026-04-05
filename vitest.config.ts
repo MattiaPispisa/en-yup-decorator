@@ -23,7 +23,9 @@ export default defineConfig({
     include: ["test/**/*.test.ts"],
     coverage: {
       include: ["src/**/*.ts"],
-      exclude: ["test/**", "**/*.test.ts", "**/*.d.ts"],
+      exclude: ["test/**", "**/*.test.ts", "**/*.d.ts", "src/types.ts"],
+      reporter: ["text", "lcov"],
+      reportsDirectory: "./coverage",
       thresholds: {
         functions: 100,
         lines: 95,

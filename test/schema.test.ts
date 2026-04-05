@@ -1,7 +1,72 @@
 import { describe, expect, it } from "vitest";
 
 import { Friend, User } from "./models/user";
-import { a, getSchemaByType, validate } from "../src/index";
+import {
+  a,
+  getSchemaByType,
+  is,
+  namedSchema,
+  nestedType,
+  schema,
+  validate,
+} from "../src/index";
+
+@schema()
+class EmptySchema {
+}
+
+class ChildWithoutSchema {
+  constructor(args: { name: string }) {
+    this.name = args.name;
+  }
+
+  @is(a.string().required())
+  name: string;
+}
+
+@schema()
+class ParentWithNestedWithoutSchema {
+  constructor(args: { child: ChildWithoutSchema }) {
+    this.child = args.child;
+  }
+
+  @nestedType(() => ChildWithoutSchema)
+  child: ChildWithoutSchema;
+}
+
+@schema({ useTargetClass: true })
+class SimpleUser {
+  constructor(args: { name: string }) {
+    this.name = args.name;
+  }
+
+  @is(a.string().required())
+  name: string;
+}
+
+@schema({
+  compose: (o) => o.stripUnknown(),
+})
+class UserWithCompose {
+  constructor(args: { name: string }) {
+    this.name = args.name;
+  }
+
+  @is(a.string().required())
+  name: string;
+}
+
+@namedSchema("user-compose", {
+  compose: (o) => o.noUnknown(true),
+})
+class NamedUserWithCompose {
+  constructor(args: { name: string }) {
+    this.name = args.name;
+  }
+
+  @is(a.string().required())
+  name: string;
+}
 
 describe("EnYupSchema method ", () => {
   describe("preserve class instances", function () {
@@ -94,9 +159,97 @@ describe("EnYupSchema method ", () => {
   });
 
   it("should stripUnknown", async () => {
-    const schema = getSchemaByType(User).pick(["name"]).stripUnknown();
-    const result = await schema.validate({ name: "Mattia", unknownKey: "value" });
+    const s = getSchemaByType(User).pick(["name"]).stripUnknown();
+    const result = await s.validate({ name: "Mattia", unknownKey: "value" });
     expect(result).toEqual({ name: "Mattia" });
+  });
+
+  it("should EnYupSchema from directly", async () => {
+    const s = getSchemaByType(SimpleUser).from("name", "fullName", true);
+    const result = await s.validate({ name: "Mattia" });
+    expect(result).toHaveProperty("fullName", "Mattia");
+    expect(result).toHaveProperty("name", "Mattia");
+  });
+
+  it("should EnYupSchema stripUnknown directly", async () => {
+    const s = getSchemaByType(User).stripUnknown();
+    const result = await s.validate({
+      name: "Mattia",
+      birthday: birthday.toString(),
+      friends: { "1": { name: "Vincenzo" } },
+      unknownKey: "x",
+    });
+    expect(result).not.toHaveProperty("unknownKey");
+  });
+
+  it("should EnYupSchema noUnknown with boolean", async () => {
+    const s = getSchemaByType(User).noUnknown(true);
+    const result = await s.validate({
+      name: "Mattia",
+      birthday: birthday.toString(),
+      friends: { "1": { name: "Vincenzo" } },
+      x: 1,
+    });
+    expect(result).not.toHaveProperty("x");
+  });
+
+  it("should EnYupSchema noUnknown with message overload", async () => {
+    const s = getSchemaByType(User).noUnknown("No unknown keys");
+    const result = await s.validate({
+      name: "Mattia",
+      birthday: birthday.toString(),
+      friends: { "1": { name: "Vincenzo" } },
+      x: 1,
+    });
+    expect(result).not.toHaveProperty("x");
+  });
+
+  it("should support empty schema class", async () => {
+    const s = getSchemaByType(EmptySchema);
+    const result = await s.validate({});
+    expect(result).toEqual({});
+  });
+
+  it("should throw when getSchemaByType receives target without constructor", () => {
+    expect(() => getSchemaByType(Object.create(null))).toThrow(
+      "Cannot get schema: target or target.constructor is undefined",
+    );
+  });
+
+  it("should support nestedType referencing class without @schema (lazy define)", async () => {
+    const result = await validate({
+      object: { name: "fromChild", child: { name: "Test" } },
+      schemaName: ParentWithNestedWithoutSchema,
+    });
+    expect(result.child).toEqual({ name: "Test" });
+  });
+
+  describe("compose option", () => {
+    it("should apply compose callback with @schema()", async () => {
+      const result = await validate({
+        object: { name: "Mattia", unknownKey: "value" },
+        schemaName: UserWithCompose,
+      });
+      expect(result).toEqual({ name: "Mattia" });
+      expect(result).not.toHaveProperty("unknownKey");
+    });
+
+    it("should apply compose callback with @namedSchema()", async () => {
+      const result = await validate({
+        object: { name: "Mattia" },
+        schemaName: "user-compose",
+      });
+      expect(result).toEqual({ name: "Mattia" });
+    });
+
+    it("should strip unknown keys when compose uses noUnknown(true)", async () => {
+      const result = await validate({
+        object: { name: "Mattia", unknownKey: "value" },
+        schemaName: "user-compose",
+      });
+      expect(result).toEqual({ name: "Mattia" });
+      expect(result).not.toHaveProperty("unknownKey");
+    });
   });
 });
 

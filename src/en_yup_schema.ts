@@ -3,11 +3,11 @@ import * as yup from "yup";
 /**
  * Extended {@link yup.Schema} interface with common {@link yup.ObjectSchema} methods.
  *
- * Includes pick, omit, partial, deepPartial, from, stripUnknown.
+ * Includes pick, omit, partial, deepPartial, from, stripUnknown, noUnknown.
  */
 type IEnYupSchema = Pick<
   yup.ObjectSchema<yup.AnyObject>,
-  "pick" | "omit" | "partial" | "deepPartial" | "from" | "stripUnknown"
+  "pick" | "omit" | "partial" | "deepPartial" | "from" | "stripUnknown" | "noUnknown"
 > &
   yup.Schema;
 
@@ -39,20 +39,56 @@ class EnYupSchema extends yup.Schema implements IEnYupSchema {
     });
     this.schema = yup.object(shape);
 
+    // we need to use mutation in order to preserve the instance otherwise a copy will convert
+    // the value in a plain object
     this.withMutation(() => {
       this.transform((value, _, ctx) => {
-        const validData = this.schema.validateSync(value, {
-          abortEarly: false,
-          strict: false,
-        });
-
         if (ctx.isType(value)) {
-          return validData;
+          return value;
         }
 
-        return new (target as any)(validData);
+        // apply cast and transform to the original value, 
+        // in order to get the correct types for the constructor
+        const castedData = this.schema.cast(value, {
+          // assert is false to avoid throwing errors.
+          // let the validation step throw the errors
+          assert: false,
+          stripUnknown: false
+        });
+
+        return new (target as any)(castedData);
+      });
+
+      this.test({
+        name: 'en_yup_async_validation',
+        test: async (value, testContext) => {
+          try {
+            // after cast value should be an instance of the target class
+            await this.schema.validate(value, {
+              abortEarly: testContext.options.abortEarly ?? false,
+              strict: testContext.options.strict ?? false,
+              context: testContext.options.context,
+            });
+            return true;
+          } catch (err) {
+            if (err instanceof yup.ValidationError) {
+              return err;
+            }
+            throw err;
+          }
+        },
       });
     });
+  }
+
+  noUnknown(message?: yup.Message): yup.ObjectSchema<yup.AnyObject, yup.AnyObject, any, "">
+  noUnknown(noAllow: boolean, message?: yup.Message): yup.ObjectSchema<yup.AnyObject, yup.AnyObject, any, "">
+  noUnknown(noAllow?: yup.Message | boolean, message?: yup.Message): yup.ObjectSchema<yup.AnyObject, yup.AnyObject, any, ""> {
+    if (typeof noAllow !== 'boolean') {
+      return this.schema.noUnknown(noAllow);
+
+    }
+    return this.schema.noUnknown(noAllow, message);
   }
 
   private schema: yup.ObjectSchema<yup.AnyObject>;
